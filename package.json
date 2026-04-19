@@ -1,0 +1,79 @@
+{
+  "name": "@szum-io/sdk",
+  "version": "0.0.0",
+  "description": "Render charts from a JSON config – SVG or PNG, embeddable in emails, PDFs, Slack, or any <img> tag. Official TypeScript SDK for szum.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "author": "Bartosz Prusinowski",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/szum-io/sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/szum-io/sdk/issues"
+  },
+  "homepage": "https://szum.io/docs",
+  "keywords": [
+    "chart",
+    "charts",
+    "chart-image",
+    "chart-api",
+    "chart-image-api",
+    "chart-generator",
+    "chart-in-email",
+    "email-chart",
+    "data-visualization",
+    "dataviz",
+    "svg",
+    "png",
+    "server-side-rendering",
+    "grammar-of-graphics",
+    "typescript",
+    "szum"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "browser": false,
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "knip": "knip",
+    "version": "node scripts/sync-version.mjs && git add src/version.ts",
+    "prepublishOnly": "node scripts/check-version.mjs && pnpm test && pnpm typecheck && pnpm build",
+    "postpublish": "git push && git push --tags"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "knip": "^6.4.1",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.4"
+  },
+  "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319"
+}
