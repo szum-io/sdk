@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Nothing yet.
 
+## [1.0.1] - 2026-04-23
+
+### Added
+
+- Optional `tickLabelFontWeight` in `themeOverrides`.
+
+### Fixed
+
+- `fetchWithTimeout` no longer calls `Date.now()` unless `SZUM_DEBUG=true`, fixing Next.js 16 `cacheComponents` pre-render warnings in Server Components.
+
 ## [1.0.0] - 2026-04-19
 
 ### Added
@@ -23,5 +33,6 @@ Nothing yet.
 - `SZUM_DEBUG=true` env var for request/response logging to `stderr`.
 - `SCHEMA_VERSION` export tied to the chart schema version the SDK was built against.
 
-[unreleased]: https://github.com/szum-io/sdk/compare/v1.0.0...HEAD
+[unreleased]: https://github.com/szum-io/sdk/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/szum-io/sdk/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/szum-io/sdk/releases/tag/v1.0.0
