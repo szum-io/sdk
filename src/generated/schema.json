@@ -2093,6 +2093,9 @@
         },
         "tickLabelColor": {
           "type": "string"
+        },
+        "tickLabelFontWeight": {
+          "type": "string"
         }
       },
       "additionalProperties": false

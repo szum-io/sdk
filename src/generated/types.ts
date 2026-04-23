@@ -1979,6 +1979,7 @@ export interface ChartConfigInput {
     tickSize?: number;
     tickPadding?: number;
     tickLabelColor?: string;
+    tickLabelFontWeight?: string;
   };
   data?: {
     [k: string]: string | number;
