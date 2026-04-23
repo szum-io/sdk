@@ -36,10 +36,12 @@ const USER_AGENT =
     ? `szum-sdk/${SDK_VERSION} node/${process.versions.node}`
     : `szum-sdk/${SDK_VERSION}`;
 
+const isDebugEnabled = (): boolean => {
+  return process.env.SZUM_DEBUG === "true";
+};
+
 const debug = (msg: string): void => {
-  if (process.env.SZUM_DEBUG === "true") {
-    console.error(`[szum-sdk] ${msg}`);
-  }
+  console.error(`[szum-sdk] ${msg}`);
 };
 
 const parseRetryAfter = (response: Response): number | null => {
@@ -211,31 +213,47 @@ export class Szum {
     const timeoutId = setTimeout(() => {
       controller.abort();
     }, timeout);
-    const start = Date.now();
+    const debugEnabled = isDebugEnabled();
+    const start = debugEnabled ? Date.now() : 0;
 
-    debug(`${init.method} ${url}`);
+    if (debugEnabled) {
+      debug(`${init.method} ${url}`);
+    }
 
     try {
       const response = await fetch(url, {
         ...init,
         signal: combineSignals(controller.signal, options?.signal),
       });
-      debug(`← ${response.status} (${Date.now() - start}ms)`);
+      if (debugEnabled) {
+        debug(`← ${response.status} (${Date.now() - start}ms)`);
+      }
+
       return response;
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
         if (options?.signal?.aborted) {
-          debug(`← aborted by caller (${Date.now() - start}ms)`);
+          if (debugEnabled) {
+            debug(`← aborted by caller (${Date.now() - start}ms)`);
+          }
+
           throw error;
         }
 
-        debug(`← timeout after ${timeout}ms`);
+        if (debugEnabled) {
+          debug(`← timeout after ${timeout}ms`);
+        }
+
         throw new SzumConnectionError({
           message: `Request timed out after ${timeout}ms`,
           status: 0,
         });
       }
-      debug(`← network error (${Date.now() - start}ms)`);
+
+      if (debugEnabled) {
+        debug(`← network error (${Date.now() - start}ms)`);
+      }
+
       throw error;
     } finally {
       clearTimeout(timeoutId);
@@ -266,9 +284,12 @@ export class Szum {
         }
 
         const delay = computeRetryDelay(attempt, err as SzumError);
-        debug(
-          `retrying in ${Math.round(delay)}ms (attempt ${attempt + 2}/${this.maxRetries + 1})`,
-        );
+        if (isDebugEnabled()) {
+          debug(
+            `retrying in ${Math.round(delay)}ms (attempt ${attempt + 2}/${this.maxRetries + 1})`,
+          );
+        }
+
         await sleep(delay, options?.signal);
       }
     }
