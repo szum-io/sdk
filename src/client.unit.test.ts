@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { type ChartConfig, Szum } from "./client";
 import {
+  SzumAPIError,
   SzumAuthenticationError,
   SzumConnectionError,
   SzumError,
@@ -376,8 +377,8 @@ describe("Szum (unit)", () => {
     });
   });
 
-  describe("signedUrl", () => {
-    it("sends correct request to signed-url endpoint", async () => {
+  describe("charts.create", () => {
+    it("sends correct request to /api/charts", async () => {
       const szum = new Szum({
         apiKey: "sk_test",
         baseUrl: "https://test.szum.io",
@@ -385,57 +386,118 @@ describe("Szum (unit)", () => {
       fetchMock.mockResolvedValue(
         createMockResponse({
           body: JSON.stringify({
-            url: "https://szum.io/chart?config=...&sig=abc&kid=123",
+            url: "https://szum.io/c/abc123",
+            id: "abc123",
           }),
         }),
       );
 
-      await szum.signedUrl(VALID_CONFIG);
+      await szum.charts.create(VALID_CONFIG);
 
       expect(fetchMock).toHaveBeenCalledOnce();
       const [url, init] = fetchMock.mock.calls[0];
-      expect(url).toBe("https://test.szum.io/api/signed-url");
+      expect(url).toBe("https://test.szum.io/api/charts");
       expect(init?.method).toBe("POST");
 
       const body = JSON.parse(init?.body as string);
       expect(body.config).toEqual({ ...VALID_CONFIG, version: SCHEMA_VERSION });
     });
 
-    it("returns URL string on success", async () => {
+    it("returns { url, id } on success", async () => {
       const szum = new Szum({
         apiKey: "sk_test",
         baseUrl: "https://test.szum.io",
       });
-      const expectedUrl = "https://szum.io/chart?config=abc&sig=xyz&kid=k1";
+      const expectedUrl = "https://szum.io/c/abc123";
+      const expectedId = "abc123";
       fetchMock.mockResolvedValue(
         createMockResponse({
-          body: JSON.stringify({ url: expectedUrl }),
+          body: JSON.stringify({ url: expectedUrl, id: expectedId }),
         }),
       );
 
-      const result = await szum.signedUrl(VALID_CONFIG);
+      const result = await szum.charts.create(VALID_CONFIG);
 
-      expect(result).toBe(expectedUrl);
+      expect(result).toEqual({ url: expectedUrl, id: expectedId });
     });
 
-    it("throws SzumError when response is missing url field", async () => {
+    it("throws SzumAPIError when response is missing 'url'", async () => {
       const szum = new Szum({
         apiKey: "sk_test",
         baseUrl: "https://test.szum.io",
       });
       fetchMock.mockResolvedValue(
         createMockResponse({
-          body: JSON.stringify({ something: "else" }),
+          body: JSON.stringify({ id: "abc123" }),
         }),
       );
 
       try {
-        await szum.signedUrl(VALID_CONFIG);
+        await szum.charts.create(VALID_CONFIG);
         expect.unreachable("should have thrown");
       } catch (err) {
-        expect(err).toBeInstanceOf(SzumError);
-        const szumErr = err as SzumError;
-        expect(szumErr.message).toMatch(/missing.*url/i);
+        expect(err).toBeInstanceOf(SzumAPIError);
+        expect((err as SzumError).message).toMatch(/missing 'url'/);
+      }
+    });
+
+    it("throws SzumAPIError when response is missing 'id'", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({
+          body: JSON.stringify({ url: "https://szum.io/c/abc123" }),
+        }),
+      );
+
+      try {
+        await szum.charts.create(VALID_CONFIG);
+        expect.unreachable("should have thrown");
+      } catch (err) {
+        expect(err).toBeInstanceOf(SzumAPIError);
+        expect((err as SzumError).message).toMatch(/missing 'id'/);
+      }
+    });
+
+    it("throws SzumAPIError when success body is not JSON", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({
+          body: "<html>upstream error</html>",
+        }),
+      );
+
+      try {
+        await szum.charts.create(VALID_CONFIG);
+        expect.unreachable("should have thrown");
+      } catch (err) {
+        expect(err).toBeInstanceOf(SzumAPIError);
+        expect((err as SzumError).message).toMatch(/expected JSON body/);
+      }
+    });
+
+    it("throws SzumAPIError when success body is not a JSON object", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({
+          body: JSON.stringify(["a", "b"]),
+        }),
+      );
+
+      try {
+        await szum.charts.create(VALID_CONFIG);
+        expect.unreachable("should have thrown");
+      } catch (err) {
+        expect(err).toBeInstanceOf(SzumAPIError);
+        expect((err as SzumError).message).toMatch(/expected JSON object/);
       }
     });
 
@@ -450,19 +512,87 @@ describe("Szum (unit)", () => {
           status: 403,
           statusText: "Forbidden",
           body: JSON.stringify({
-            error: "Signed URLs are only available on the Pro plan.",
+            error: "Saved charts are only available on the Pro plan.",
           }),
         }),
       );
 
       try {
-        await szum.signedUrl(VALID_CONFIG);
+        await szum.charts.create(VALID_CONFIG);
         expect.unreachable("should have thrown");
       } catch (err) {
         expect(err).toBeInstanceOf(SzumError);
         const szumErr = err as SzumError;
         expect(szumErr.status).toBe(403);
         expect(szumErr.message).toContain("Pro plan");
+      }
+    });
+  });
+
+  describe("charts.delete", () => {
+    it("sends DELETE to /api/charts/{id}", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({ body: JSON.stringify({ ok: true }) }),
+      );
+
+      await szum.charts.delete("abc123");
+
+      expect(fetchMock).toHaveBeenCalledOnce();
+      const [url, init] = fetchMock.mock.calls[0];
+      expect(url).toBe("https://test.szum.io/api/charts/abc123");
+      expect(init?.method).toBe("DELETE");
+    });
+
+    it("URL-encodes the id", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({ body: JSON.stringify({ ok: true }) }),
+      );
+
+      await szum.charts.delete("abc/../def");
+
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe("https://test.szum.io/api/charts/abc%2F..%2Fdef");
+    });
+
+    it("throws SzumInvalidRequestError when id is empty", async () => {
+      const szum = new Szum({ apiKey: "sk_test" });
+
+      try {
+        await szum.charts.delete("");
+        expect.unreachable("should have thrown");
+      } catch (err) {
+        expect(err).toBeInstanceOf(SzumInvalidRequestError);
+        expect(err).toBeInstanceOf(SzumError);
+        expect((err as SzumError).message).toMatch(/non-empty/);
+        expect((err as SzumError).status).toBe(0);
+      }
+    });
+
+    it("throws SzumError on 404", async () => {
+      const szum = new Szum({ apiKey: "sk_test" });
+      fetchMock.mockResolvedValue(
+        createMockResponse({
+          ok: false,
+          status: 404,
+          statusText: "Not Found",
+          body: JSON.stringify({ error: "Chart not found." }),
+        }),
+      );
+
+      try {
+        await szum.charts.delete("abc123");
+        expect.unreachable("should have thrown");
+      } catch (err) {
+        expect(err).toBeInstanceOf(SzumError);
+        expect((err as SzumError).status).toBe(404);
       }
     });
   });

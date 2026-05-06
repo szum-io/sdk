@@ -12,7 +12,7 @@ Turn a JSON config into an SVG or PNG. Embed it in transactional emails, weekly 
 npm install @szum-io/sdk
 ```
 
-> **Server-side only.** The SDK sends your API key on every request. Never import it into browser code – generate signed URLs server-side and pass them to the client.
+> **Server-side only.** The SDK sends your API key on every request. Never import it into browser code – save charts server-side and pass the URLs to the client.
 
 ## Quick start
 
@@ -47,12 +47,12 @@ const png = await szum.render({
 | ----------------------- | ------------------------ | ---------------------- |
 | ![barY](assets/bar.png) | ![line](assets/line.png) | ![dot](assets/dot.png) |
 
-## Signed URLs
+## Saved charts
 
-Generate authenticated `<img>` embed URLs (Pro plan):
+Save a config server-side and embed the returned short URL in an `<img>` tag (Pro plan):
 
 ```typescript
-const url = await szum.signedUrl({
+const { url, id } = await szum.charts.create({
   format: "svg",
   theme: "editorial",
   marks: [
@@ -67,7 +67,10 @@ const url = await szum.signedUrl({
 });
 
 // Use in HTML: <img src={url} />
+// Revoke later: await szum.charts.delete(id);
 ```
+
+The returned URL points at `https://szum.io/c/<id>` and renders the same chart on every fetch.
 
 ## Configuration
 
@@ -133,7 +136,7 @@ All errors serialize cleanly via `JSON.stringify(err)` (they implement `toJSON`)
 
 | Export                    | Description                                                         |
 | ------------------------- | ------------------------------------------------------------------- |
-| `Szum`                    | Client class (`render`, `signedUrl`)                                |
+| `Szum`                    | Client class (`render`, `charts.create`, `charts.delete`)           |
 | `SzumOptions`             | Constructor options (`apiKey`, `timeout`, `maxRetries`, …)          |
 | `RequestOptions`          | Per-call options (`timeout`, `signal`)                              |
 | `SzumError`               | Base error (`code`, `status`, `message`, `retryAfter`, `requestId`) |

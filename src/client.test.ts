@@ -82,20 +82,22 @@ describe("Szum (integration)", () => {
     });
   });
 
-  describe("signedUrl", () => {
+  describe("charts.create", () => {
     it.skipIf(!HAS_API_KEY)(
-      "returns a URL string for a valid config",
+      "returns { url, id } for a valid config",
       async () => {
-        const url = await szum.signedUrl(VALID_CONFIG);
+        const result = await szum.charts.create(VALID_CONFIG);
 
-        expect(typeof url).toBe("string");
-        expect(url).toMatch(/^https?:\/\//);
+        expect(typeof result.url).toBe("string");
+        expect(result.url).toMatch(/^https?:\/\//);
+        expect(typeof result.id).toBe("string");
+        expect(result.id.length).toBeGreaterThan(0);
       },
     );
 
     it.skipIf(!HAS_API_KEY)("throws SzumError on invalid config", async () => {
       try {
-        await szum.signedUrl({
+        await szum.charts.create({
           version: "2026-03-20",
           format: "svg",
           // @ts-expect-error testing invalid discriminator value
@@ -112,7 +114,37 @@ describe("Szum (integration)", () => {
       const bad = new Szum({ apiKey: "sk_bad", baseUrl: BASE_URL });
 
       try {
-        await bad.signedUrl(VALID_CONFIG);
+        await bad.charts.create(VALID_CONFIG);
+        expect.unreachable("should have thrown");
+      } catch (err) {
+        expect(err).toBeInstanceOf(SzumError);
+        expect((err as SzumError).status).toBe(401);
+      }
+    });
+  });
+
+  describe("charts.delete", () => {
+    it.skipIf(!HAS_API_KEY)(
+      "creates a chart and then deletes it by id",
+      async () => {
+        const created = await szum.charts.create(VALID_CONFIG);
+        await szum.charts.delete(created.id);
+
+        try {
+          await szum.charts.delete(created.id);
+          expect.unreachable("second delete should have thrown 404");
+        } catch (err) {
+          expect(err).toBeInstanceOf(SzumError);
+          expect((err as SzumError).status).toBe(404);
+        }
+      },
+    );
+
+    it("throws SzumError on invalid API key", async () => {
+      const bad = new Szum({ apiKey: "sk_bad", baseUrl: BASE_URL });
+
+      try {
+        await bad.charts.delete("abc123");
         expect.unreachable("should have thrown");
       } catch (err) {
         expect(err).toBeInstanceOf(SzumError);
