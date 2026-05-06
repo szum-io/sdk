@@ -1,6 +1,6 @@
 {
   "name": "@szum-io/sdk",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Render charts from a JSON config – SVG or PNG, embeddable in emails, PDFs, Slack, or any <img> tag. Official TypeScript SDK for szum.",
   "type": "module",
   "main": "./dist/index.cjs",
