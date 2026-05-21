@@ -84,12 +84,16 @@ describe("Szum (integration)", () => {
 
   describe("charts.create", () => {
     it.skipIf(!HAS_API_KEY)(
-      "returns { url, id } for a valid config",
+      "returns { url, embedUrl, id } for a valid config",
       async () => {
         const result = await szum.charts.create(VALID_CONFIG);
 
         expect(typeof result.url).toBe("string");
         expect(result.url).toMatch(/^https?:\/\//);
+        expect(result.url).toContain("/c/");
+        expect(typeof result.embedUrl).toBe("string");
+        expect(result.embedUrl).toMatch(/^https?:\/\//);
+        expect(result.embedUrl).toContain("/e/");
         expect(typeof result.id).toBe("string");
         expect(result.id.length).toBeGreaterThan(0);
       },

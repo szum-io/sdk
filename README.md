@@ -49,10 +49,10 @@ const png = await szum.render({
 
 ## Saved charts
 
-Save a config server-side and embed the returned short URL in an `<img>` tag (Pro plan):
+Save a config server-side and embed the returned short URL in an `<img>` tag, or drop the embed URL into an `<iframe>` for an interactive version (Pro plan):
 
 ```typescript
-const { url, id } = await szum.charts.create({
+const { url, embedUrl, id } = await szum.charts.create({
   format: "svg",
   theme: "editorial",
   marks: [
@@ -66,11 +66,12 @@ const { url, id } = await szum.charts.create({
   ],
 });
 
-// Use in HTML: <img src={url} />
+// Static image: <img src={url} />
+// Interactive embed: <iframe src={embedUrl} />
 // Revoke later: await szum.charts.delete(id);
 ```
 
-The returned URL points at `https://szum.io/c/<id>` and renders the same chart on every fetch.
+`url` points at `https://szum.io/c/<id>` and renders the same chart image on every fetch. `embedUrl` points at `https://szum.io/e/<id>` and serves an interactive HTML page with tooltips, legend toggle, and responsive resize.
 
 ## Configuration
 

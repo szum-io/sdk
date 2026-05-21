@@ -387,6 +387,7 @@ describe("Szum (unit)", () => {
         createMockResponse({
           body: JSON.stringify({
             url: "https://szum.io/c/abc123",
+            embedUrl: "https://szum.io/e/abc123",
             id: "abc123",
           }),
         }),
@@ -403,22 +404,31 @@ describe("Szum (unit)", () => {
       expect(body.config).toEqual({ ...VALID_CONFIG, version: SCHEMA_VERSION });
     });
 
-    it("returns { url, id } on success", async () => {
+    it("returns { url, embedUrl, id } on success", async () => {
       const szum = new Szum({
         apiKey: "sk_test",
         baseUrl: "https://test.szum.io",
       });
       const expectedUrl = "https://szum.io/c/abc123";
+      const expectedEmbedUrl = "https://szum.io/e/abc123";
       const expectedId = "abc123";
       fetchMock.mockResolvedValue(
         createMockResponse({
-          body: JSON.stringify({ url: expectedUrl, id: expectedId }),
+          body: JSON.stringify({
+            url: expectedUrl,
+            embedUrl: expectedEmbedUrl,
+            id: expectedId,
+          }),
         }),
       );
 
       const result = await szum.charts.create(VALID_CONFIG);
 
-      expect(result).toEqual({ url: expectedUrl, id: expectedId });
+      expect(result).toEqual({
+        url: expectedUrl,
+        embedUrl: expectedEmbedUrl,
+        id: expectedId,
+      });
     });
 
     it("throws SzumAPIError when response is missing 'url'", async () => {
@@ -428,7 +438,10 @@ describe("Szum (unit)", () => {
       });
       fetchMock.mockResolvedValue(
         createMockResponse({
-          body: JSON.stringify({ id: "abc123" }),
+          body: JSON.stringify({
+            embedUrl: "https://szum.io/e/abc123",
+            id: "abc123",
+          }),
         }),
       );
 
@@ -441,6 +454,29 @@ describe("Szum (unit)", () => {
       }
     });
 
+    it("throws SzumAPIError when response is missing 'embedUrl'", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({
+          body: JSON.stringify({
+            url: "https://szum.io/c/abc123",
+            id: "abc123",
+          }),
+        }),
+      );
+
+      try {
+        await szum.charts.create(VALID_CONFIG);
+        expect.unreachable("should have thrown");
+      } catch (err) {
+        expect(err).toBeInstanceOf(SzumAPIError);
+        expect((err as SzumError).message).toMatch(/missing 'embedUrl'/);
+      }
+    });
+
     it("throws SzumAPIError when response is missing 'id'", async () => {
       const szum = new Szum({
         apiKey: "sk_test",
@@ -448,7 +484,10 @@ describe("Szum (unit)", () => {
       });
       fetchMock.mockResolvedValue(
         createMockResponse({
-          body: JSON.stringify({ url: "https://szum.io/c/abc123" }),
+          body: JSON.stringify({
+            url: "https://szum.io/c/abc123",
+            embedUrl: "https://szum.io/e/abc123",
+          }),
         }),
       );
 

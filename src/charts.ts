@@ -22,7 +22,7 @@ export class SzumCharts {
   async create(
     config: ChartConfig,
     options?: RequestOptions,
-  ): Promise<{ url: string; id: string }> {
+  ): Promise<{ url: string; embedUrl: string; id: string }> {
     const response = await this.api.request(
       "/api/charts",
       {
@@ -34,9 +34,10 @@ export class SzumCharts {
 
     const obj = await parseJsonObject(response);
     const url = requireString(obj, "url", response);
+    const embedUrl = requireString(obj, "embedUrl", response);
     const id = requireString(obj, "id", response);
 
-    return { url, id };
+    return { url, embedUrl, id };
   }
 
   async delete(id: string, options?: RequestOptions): Promise<void> {
