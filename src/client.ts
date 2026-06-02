@@ -17,6 +17,13 @@ export type SzumOptions = {
 export type RequestOptions = {
   timeout?: number;
   signal?: AbortSignal;
+  /**
+   * Idempotency key for retry-safe creates. `charts.create` auto-generates one
+   * per call (reused across that call's retries) so a committed-but-timed-out
+   * create can't duplicate the chart. Pass your own to dedupe across processes.
+   * Ignored by endpoints that aren't `POST /api/charts`.
+   */
+  idempotencyKey?: string;
 };
 
 const DEFAULT_BASE_URL = "https://szum.io";
@@ -88,7 +95,7 @@ export class Szum {
   ): Promise<Response> {
     return fetchWithRetry(
       `${this.baseUrl}${path}`,
-      { ...init, headers: this.createHeaders() },
+      { ...init, headers: this.createHeaders(options?.idempotencyKey) },
       {
         timeout: options?.timeout ?? this.timeout,
         maxRetries: this.maxRetries,
@@ -97,12 +104,18 @@ export class Szum {
     );
   }
 
-  private createHeaders(): Record<string, string> {
-    return {
+  private createHeaders(idempotencyKey?: string): Record<string, string> {
+    const headers: Record<string, string> = {
       Authorization: `Bearer ${this.apiKey}`,
       "Content-Type": "application/json",
       "User-Agent": USER_AGENT,
     };
+
+    if (idempotencyKey) {
+      headers["Idempotency-Key"] = idempotencyKey;
+    }
+
+    return headers;
   }
 
   private resolveConfig(config: ChartConfig): ChartConfigInput {

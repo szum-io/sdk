@@ -2,7 +2,7 @@
 
 Official TypeScript SDK for [szum](https://szum.io), a chart image API.
 
-Turn a JSON config into an SVG or PNG. Embed it in transactional emails, weekly digests, PDF reports, Slack messages, dashboards – anywhere an `<img>` tag works. No headless browser, no canvas, no client-side JavaScript.
+Turn a JSON config into an SVG, PNG or interactive embed. Use it in transactional emails, weekly digests, PDF reports, Slack messages, dashboards – anywhere an `<img>` tag works. No headless browser, no canvas, no client-side JavaScript.
 
 ![szum chart example](assets/hero.png)
 
@@ -41,18 +41,12 @@ const png = await szum.render({
 });
 ```
 
-## A few marks
-
-| barY                    | line                     | dot                    |
-| ----------------------- | ------------------------ | ---------------------- |
-| ![barY](assets/bar.png) | ![line](assets/line.png) | ![dot](assets/dot.png) |
-
 ## Saved charts
 
 Save a config server-side and embed the returned short URL in an `<img>` tag, or drop the embed URL into an `<iframe>` for an interactive version (Pro plan):
 
 ```typescript
-const { url, embedUrl, id } = await szum.charts.create({
+const chart = await szum.charts.create({
   format: "svg",
   theme: "editorial",
   marks: [
@@ -66,12 +60,38 @@ const { url, embedUrl, id } = await szum.charts.create({
   ],
 });
 
-// Static image: <img src={url} />
-// Interactive embed: <iframe src={embedUrl} />
-// Revoke later: await szum.charts.delete(id);
+// Static image: <img src={chart.imageUrl} />
+// Interactive embed: <iframe src={chart.embedUrl} />
+// Revoke later: await szum.charts.delete(chart.id);
 ```
 
-`url` points at `https://szum.io/c/<id>` and renders the same chart image on every fetch. `embedUrl` points at `https://szum.io/e/<id>` and serves an interactive HTML page with tooltips, legend toggle, and responsive resize.
+`create` returns a **chart object** – `{ id, source, title, createdAt, updatedAt, sizeBytes, imageUrl, embedUrl, configUrl }` – and the same shape comes back from `get`, `update`, and each item of `list`. `imageUrl` (`https://szum.io/c/<id>`) renders the same image on every fetch; append `.png`/`.svg` to force a format. `embedUrl` (`https://szum.io/e/<id>`) serves an interactive HTML page with tooltips, legend toggle, and responsive resize.
+
+### Managing saved charts
+
+Beyond `create` and `delete`, the `charts` resource lets you enumerate and edit:
+
+```typescript
+// List your charts, newest first; page via nextCursor
+const { items, nextCursor } = await szum.charts.list({ source: "api" });
+
+// Read one chart's metadata, or its config
+const chart = await szum.charts.get(id);
+const config = await szum.charts.getConfig(id);
+
+// Read many configs in one request (max 100 ids)
+const { configs, missing } = await szum.charts.getConfigs([id1, id2]);
+
+// Replace a config in place – same id, same /c/ and /e/ URLs
+await szum.charts.update(id, {
+  format: "svg",
+  marks: [
+    /* … */
+  ],
+});
+```
+
+`list` pages via `nextCursor` (pass it back as `cursor`; `null` on the last page). `getConfigs` returns `{ configs, missing }`; each `missing` entry carries a `reason` – an open set (today `"not_found"` or `"unavailable"`), so match the values you handle and treat anything unfamiliar as a non-fatal skip.
 
 ## Configuration
 
@@ -135,21 +155,26 @@ All errors serialize cleanly via `JSON.stringify(err)` (they implement `toJSON`)
 
 ## Exports
 
-| Export                    | Description                                                         |
-| ------------------------- | ------------------------------------------------------------------- |
-| `Szum`                    | Client class (`render`, `charts.create`, `charts.delete`)           |
-| `SzumOptions`             | Constructor options (`apiKey`, `timeout`, `maxRetries`, …)          |
-| `RequestOptions`          | Per-call options (`timeout`, `signal`)                              |
-| `SzumError`               | Base error (`code`, `status`, `message`, `retryAfter`, `requestId`) |
-| `SzumAuthenticationError` | 401                                                                 |
-| `SzumPermissionError`     | 403                                                                 |
-| `SzumInvalidRequestError` | 400 / 413                                                           |
-| `SzumRateLimitError`      | 429                                                                 |
-| `SzumAPIError`            | 5xx                                                                 |
-| `SzumConnectionError`     | Timeout / network                                                   |
-| `ChartConfig`             | Config type for SDK methods (`version` optional)                    |
-| `ChartConfigInput`        | Full config type including required `version`                       |
-| `SCHEMA_VERSION`          | Schema version this SDK was built against                           |
+| Export                    | Description                                                                                      |
+| ------------------------- | ------------------------------------------------------------------------------------------------ |
+| `Szum`                    | Client class (`render`; `charts.create`/`list`/`get`/`getConfig`/`getConfigs`/`update`/`delete`) |
+| `SzumOptions`             | Constructor options (`apiKey`, `timeout`, `maxRetries`, …)                                       |
+| `RequestOptions`          | Per-call options (`timeout`, `signal`)                                                           |
+| `SzumError`               | Base error (`code`, `status`, `message`, `retryAfter`, `requestId`)                              |
+| `SzumAuthenticationError` | 401                                                                                              |
+| `SzumPermissionError`     | 403                                                                                              |
+| `SzumInvalidRequestError` | 400 / 413                                                                                        |
+| `SzumRateLimitError`      | 429                                                                                              |
+| `SzumAPIError`            | 5xx                                                                                              |
+| `SzumConnectionError`     | Timeout / network                                                                                |
+| `ChartConfig`             | Config type for SDK methods (`version` optional)                                                 |
+| `ChartConfigInput`        | Full config type including required `version`                                                    |
+| `SavedChart`              | Saved-chart object from `charts.create`/`get`/`update`/`list`                                    |
+| `SavedChartSource`        | Open union of chart origins (`"api"`, `"figma"`, `"app"`, `"mcp"`, …)                            |
+| `SavedChartPage`          | `charts.list` result (`items`, `nextCursor`)                                                     |
+| `SavedChartConfigs`       | `charts.getConfigs` result (`configs`, `missing`)                                                |
+| `ConfigMissingReason`     | Open union: why a config was missing (`"not_found"`, `"unavailable"`, …)                         |
+| `SCHEMA_VERSION`          | Schema version this SDK was built against                                                        |
 
 ## Documentation
 

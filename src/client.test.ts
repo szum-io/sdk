@@ -84,13 +84,13 @@ describe("Szum (integration)", () => {
 
   describe("charts.create", () => {
     it.skipIf(!HAS_API_KEY)(
-      "returns { url, embedUrl, id } for a valid config",
+      "returns the chart object for a valid config",
       async () => {
         const result = await szum.charts.create(VALID_CONFIG);
 
-        expect(typeof result.url).toBe("string");
-        expect(result.url).toMatch(/^https?:\/\//);
-        expect(result.url).toContain("/c/");
+        expect(typeof result.imageUrl).toBe("string");
+        expect(result.imageUrl).toMatch(/^https?:\/\//);
+        expect(result.imageUrl).toContain("/c/");
         expect(typeof result.embedUrl).toBe("string");
         expect(result.embedUrl).toMatch(/^https?:\/\//);
         expect(result.embedUrl).toContain("/e/");
@@ -133,14 +133,7 @@ describe("Szum (integration)", () => {
       async () => {
         const created = await szum.charts.create(VALID_CONFIG);
         await szum.charts.delete(created.id);
-
-        try {
-          await szum.charts.delete(created.id);
-          expect.unreachable("second delete should have thrown 404");
-        } catch (err) {
-          expect(err).toBeInstanceOf(SzumError);
-          expect((err as SzumError).status).toBe(404);
-        }
+        await szum.charts.delete(created.id);
       },
     );
 

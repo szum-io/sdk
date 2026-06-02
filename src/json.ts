@@ -27,6 +27,42 @@ export const parseJsonObject = async (
   return body as Record<string, unknown>;
 };
 
+export const requireNumber = (
+  obj: Record<string, unknown>,
+  key: string,
+  response: Response,
+): number => {
+  const value = obj[key];
+
+  if (typeof value !== "number") {
+    throw new SzumAPIError({
+      message: `Invalid response: missing '${key}' field`,
+      status: response.status,
+      requestId: parseRequestId(response),
+    });
+  }
+
+  return value;
+};
+
+export const requireObject = (
+  obj: Record<string, unknown>,
+  key: string,
+  response: Response,
+): Record<string, unknown> => {
+  const value = obj[key];
+
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new SzumAPIError({
+      message: `Invalid response: missing '${key}' field`,
+      status: response.status,
+      requestId: parseRequestId(response),
+    });
+  }
+
+  return value as Record<string, unknown>;
+};
+
 export const requireString = (
   obj: Record<string, unknown>,
   key: string,
