@@ -14,7 +14,16 @@ export interface ChartConfigInput {
   };
   title?: string;
   subtitle?: string;
-  theme?: "modern" | "editorial" | "dark" | "neon" | "pastel" | "technical";
+  /**
+   * Caption below the chart (a source line, methodology note, date). URLs, bare domains, and [label](url) links in it are auto-detected and rendered as inline links on every surface.
+   */
+  footer?: string;
+  headerAlign?: "left" | "center" | "right";
+  /**
+   * Show a small "made with szum" credit in the bottom-right. Always on for free and keyless renders; Pro omits it by default and sets true to opt in.
+   */
+  attribution?: boolean;
+  theme?: "editorial" | "clean" | "noir" | "loud" | "soft" | "technical";
   themeOverrides?: {
     backgroundColor?: string;
     colors?: string[];
@@ -1967,6 +1976,8 @@ export interface ChartConfigInput {
       | "Zhi Mang Xing"
       | "Zilla Slab"
       | "Zilla Slab Highlight";
+    titleFontFamily?: string;
+    numericFontFamily?: string;
     fontSize?: number;
     titleFontWeight?: string;
     titleFontSize?: number;
@@ -1975,6 +1986,10 @@ export interface ChartConfigInput {
     subtitleColor?: string;
     titleSubtitleGap?: number;
     headerGap?: number;
+    footerFontSize?: number;
+    footerColor?: string;
+    footerLinkColor?: string;
+    footerGap?: number;
     axisLineWidth?: number;
     axisColor?: string;
     axisLabelColor?: string;
@@ -1985,6 +2000,21 @@ export interface ChartConfigInput {
     tickPadding?: number;
     tickLabelColor?: string;
     tickLabelFontWeight?: string;
+    tickDensity?: number;
+    gridLines?: "none" | "value" | "both";
+    axisFrame?: "none" | "baseline" | "lShape" | "full";
+    curve?: "linear" | "monotone" | "step";
+    barPadding?: number;
+    barCornerRadius?: number;
+    pieCornerRadius?: number;
+    lineStrokeWidth?: number;
+    dotRadius?: number;
+    labelColor?: string;
+    labelFontSize?: number;
+    labelFontWeight?: string;
+    labelMutedFontWeight?: string;
+    labelMutedOpacity?: number;
+    labelHaloWidth?: number;
   };
   data?: {
     [k: string]: string | number;
@@ -2005,6 +2035,10 @@ export interface ChartConfigInput {
           strokeWidth?: number;
           type: "dot";
           r?: number;
+          label?: {
+            field: string;
+            format?: string;
+          };
         }
       | {
           data?: {
@@ -2016,6 +2050,20 @@ export interface ChartConfigInput {
           stroke?: string;
           strokeWidth?: number;
           type: "line";
+          curve?: "linear" | "monotone" | "step";
+          label?:
+            | boolean
+            | {
+                end?: boolean | ("category" | "value")[];
+                points?:
+                  | ("extrema" | "all" | "ends")
+                  | false
+                  | {
+                      at: "extrema" | "all" | "ends";
+                      show?: ("value" | "category")[];
+                    };
+                format?: string;
+              };
         }
       | {
           data?: {
@@ -2028,6 +2076,14 @@ export interface ChartConfigInput {
           strokeWidth?: number;
           type: "barY";
           group?: "stack" | "dodge";
+          cornerRadius?: number;
+          label?:
+            | boolean
+            | {
+                show?: ("value" | "percent" | "category" | "total")[];
+                position?: "auto" | "outside" | "inside";
+                format?: string;
+              };
         }
       | {
           data?: {
@@ -2040,6 +2096,14 @@ export interface ChartConfigInput {
           strokeWidth?: number;
           type: "barX";
           group?: "stack" | "dodge";
+          cornerRadius?: number;
+          label?:
+            | boolean
+            | {
+                show?: ("value" | "percent" | "category" | "total")[];
+                position?: "auto" | "outside" | "inside";
+                format?: string;
+              };
         }
       | {
           data?: {
@@ -2051,6 +2115,13 @@ export interface ChartConfigInput {
           stroke?: string;
           strokeWidth?: number;
           type: "areaY";
+          curve?: "linear" | "monotone" | "step";
+          label?:
+            | boolean
+            | {
+                end?: boolean | ("category" | "value" | "percent")[];
+                format?: string;
+              };
         }
       | {
           data?: {
@@ -2062,6 +2133,7 @@ export interface ChartConfigInput {
           stroke?: string;
           strokeWidth?: number;
           type: "areaX";
+          curve?: "linear" | "monotone" | "step";
         }
       | {
           data?: {
@@ -2074,6 +2146,14 @@ export interface ChartConfigInput {
           strokeWidth?: number;
           type: "pie";
           innerRadius?: number;
+          cornerRadius?: number;
+          label?:
+            | boolean
+            | {
+                show?: ("value" | "percent" | "category")[];
+                position?: "auto" | "inside" | "outside";
+                format?: string;
+              };
         }
       | {
           data?: {
@@ -2127,6 +2207,10 @@ export interface ChartConfigInput {
           strokeWidth?: number;
           type: "dot";
           r?: number;
+          label?: {
+            field: string;
+            format?: string;
+          };
         }
       | {
           data?: {
@@ -2138,6 +2222,20 @@ export interface ChartConfigInput {
           stroke?: string;
           strokeWidth?: number;
           type: "line";
+          curve?: "linear" | "monotone" | "step";
+          label?:
+            | boolean
+            | {
+                end?: boolean | ("category" | "value")[];
+                points?:
+                  | ("extrema" | "all" | "ends")
+                  | false
+                  | {
+                      at: "extrema" | "all" | "ends";
+                      show?: ("value" | "category")[];
+                    };
+                format?: string;
+              };
         }
       | {
           data?: {
@@ -2150,6 +2248,14 @@ export interface ChartConfigInput {
           strokeWidth?: number;
           type: "barY";
           group?: "stack" | "dodge";
+          cornerRadius?: number;
+          label?:
+            | boolean
+            | {
+                show?: ("value" | "percent" | "category" | "total")[];
+                position?: "auto" | "outside" | "inside";
+                format?: string;
+              };
         }
       | {
           data?: {
@@ -2162,6 +2268,14 @@ export interface ChartConfigInput {
           strokeWidth?: number;
           type: "barX";
           group?: "stack" | "dodge";
+          cornerRadius?: number;
+          label?:
+            | boolean
+            | {
+                show?: ("value" | "percent" | "category" | "total")[];
+                position?: "auto" | "outside" | "inside";
+                format?: string;
+              };
         }
       | {
           data?: {
@@ -2173,6 +2287,13 @@ export interface ChartConfigInput {
           stroke?: string;
           strokeWidth?: number;
           type: "areaY";
+          curve?: "linear" | "monotone" | "step";
+          label?:
+            | boolean
+            | {
+                end?: boolean | ("category" | "value" | "percent")[];
+                format?: string;
+              };
         }
       | {
           data?: {
@@ -2184,6 +2305,7 @@ export interface ChartConfigInput {
           stroke?: string;
           strokeWidth?: number;
           type: "areaX";
+          curve?: "linear" | "monotone" | "step";
         }
       | {
           data?: {
@@ -2196,6 +2318,14 @@ export interface ChartConfigInput {
           strokeWidth?: number;
           type: "pie";
           innerRadius?: number;
+          cornerRadius?: number;
+          label?:
+            | boolean
+            | {
+                show?: ("value" | "percent" | "category")[];
+                position?: "auto" | "inside" | "outside";
+                format?: string;
+              };
         }
       | {
           data?: {

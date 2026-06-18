@@ -61,15 +61,31 @@
     "subtitle": {
       "type": "string"
     },
-    "theme": {
-      "default": "modern",
+    "footer": {
+      "description": "Caption below the chart (a source line, methodology note, date). URLs, bare domains, and [label](url) links in it are auto-detected and rendered as inline links on every surface.",
+      "type": "string"
+    },
+    "headerAlign": {
       "type": "string",
       "enum": [
-        "modern",
+        "left",
+        "center",
+        "right"
+      ]
+    },
+    "attribution": {
+      "description": "Show a small \"made with szum\" credit in the bottom-right. Always on for free and keyless renders; Pro omits it by default and sets true to opt in.",
+      "type": "boolean"
+    },
+    "theme": {
+      "default": "editorial",
+      "type": "string",
+      "enum": [
         "editorial",
-        "dark",
-        "neon",
-        "pastel",
+        "clean",
+        "noir",
+        "loud",
+        "soft",
         "technical"
       ]
     },
@@ -2046,6 +2062,12 @@
             "Zilla Slab Highlight"
           ]
         },
+        "titleFontFamily": {
+          "type": "string"
+        },
+        "numericFontFamily": {
+          "type": "string"
+        },
         "fontSize": {
           "type": "number"
         },
@@ -2068,6 +2090,18 @@
           "type": "number"
         },
         "headerGap": {
+          "type": "number"
+        },
+        "footerFontSize": {
+          "type": "number"
+        },
+        "footerColor": {
+          "type": "string"
+        },
+        "footerLinkColor": {
+          "type": "string"
+        },
+        "footerGap": {
           "type": "number"
         },
         "axisLineWidth": {
@@ -2099,6 +2133,67 @@
         },
         "tickLabelFontWeight": {
           "type": "string"
+        },
+        "tickDensity": {
+          "type": "number"
+        },
+        "gridLines": {
+          "type": "string",
+          "enum": [
+            "none",
+            "value",
+            "both"
+          ]
+        },
+        "axisFrame": {
+          "type": "string",
+          "enum": [
+            "none",
+            "baseline",
+            "lShape",
+            "full"
+          ]
+        },
+        "curve": {
+          "type": "string",
+          "enum": [
+            "linear",
+            "monotone",
+            "step"
+          ]
+        },
+        "barPadding": {
+          "type": "number"
+        },
+        "barCornerRadius": {
+          "type": "number"
+        },
+        "pieCornerRadius": {
+          "type": "number"
+        },
+        "lineStrokeWidth": {
+          "type": "number"
+        },
+        "dotRadius": {
+          "type": "number"
+        },
+        "labelColor": {
+          "type": "string"
+        },
+        "labelFontSize": {
+          "type": "number"
+        },
+        "labelFontWeight": {
+          "type": "string"
+        },
+        "labelMutedFontWeight": {
+          "type": "string"
+        },
+        "labelMutedOpacity": {
+          "type": "number"
+        },
+        "labelHaloWidth": {
+          "type": "number"
         }
       }
     },
@@ -2171,8 +2266,21 @@
                 "const": "dot"
               },
               "r": {
-                "default": 4,
                 "type": "number"
+              },
+              "label": {
+                "type": "object",
+                "properties": {
+                  "field": {
+                    "type": "string"
+                  },
+                  "format": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "field"
+                ]
               }
             },
             "required": [
@@ -2216,12 +2324,100 @@
                 "type": "string"
               },
               "strokeWidth": {
-                "default": 2.5,
                 "type": "number"
               },
               "type": {
                 "type": "string",
                 "const": "line"
+              },
+              "curve": {
+                "type": "string",
+                "enum": [
+                  "linear",
+                  "monotone",
+                  "step"
+                ]
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "end": {
+                        "default": [
+                          "category"
+                        ],
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "category",
+                                "value"
+                              ]
+                            }
+                          }
+                        ]
+                      },
+                      "points": {
+                        "default": false,
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "extrema",
+                              "all",
+                              "ends"
+                            ]
+                          },
+                          {
+                            "type": "boolean",
+                            "const": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "at": {
+                                "type": "string",
+                                "enum": [
+                                  "extrema",
+                                  "all",
+                                  "ends"
+                                ]
+                              },
+                              "show": {
+                                "default": [
+                                  "value"
+                                ],
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "enum": [
+                                    "value",
+                                    "category"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "at"
+                            ]
+                          }
+                        ]
+                      },
+                      "format": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
               }
             },
             "required": [
@@ -2278,6 +2474,48 @@
                 "enum": [
                   "stack",
                   "dodge"
+                ]
+              },
+              "cornerRadius": {
+                "type": "number"
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "show": {
+                        "default": [
+                          "value"
+                        ],
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "value",
+                            "percent",
+                            "category",
+                            "total"
+                          ]
+                        }
+                      },
+                      "position": {
+                        "default": "outside",
+                        "type": "string",
+                        "enum": [
+                          "auto",
+                          "outside",
+                          "inside"
+                        ]
+                      },
+                      "format": {
+                        "type": "string"
+                      }
+                    }
+                  }
                 ]
               }
             },
@@ -2336,6 +2574,48 @@
                   "stack",
                   "dodge"
                 ]
+              },
+              "cornerRadius": {
+                "type": "number"
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "show": {
+                        "default": [
+                          "value"
+                        ],
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "value",
+                            "percent",
+                            "category",
+                            "total"
+                          ]
+                        }
+                      },
+                      "position": {
+                        "default": "outside",
+                        "type": "string",
+                        "enum": [
+                          "auto",
+                          "outside",
+                          "inside"
+                        ]
+                      },
+                      "format": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
               }
             },
             "required": [
@@ -2385,6 +2665,50 @@
               "type": {
                 "type": "string",
                 "const": "areaY"
+              },
+              "curve": {
+                "type": "string",
+                "enum": [
+                  "linear",
+                  "monotone",
+                  "step"
+                ]
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "end": {
+                        "default": [
+                          "category"
+                        ],
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "category",
+                                "value",
+                                "percent"
+                              ]
+                            }
+                          }
+                        ]
+                      },
+                      "format": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
               }
             },
             "required": [
@@ -2434,6 +2758,14 @@
               "type": {
                 "type": "string",
                 "const": "areaX"
+              },
+              "curve": {
+                "type": "string",
+                "enum": [
+                  "linear",
+                  "monotone",
+                  "step"
+                ]
               }
             },
             "required": [
@@ -2489,6 +2821,48 @@
                 "type": "number",
                 "minimum": 0,
                 "maximum": 1
+              },
+              "cornerRadius": {
+                "type": "number"
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "show": {
+                        "default": [
+                          "category",
+                          "percent"
+                        ],
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "value",
+                            "percent",
+                            "category"
+                          ]
+                        }
+                      },
+                      "position": {
+                        "default": "auto",
+                        "type": "string",
+                        "enum": [
+                          "auto",
+                          "inside",
+                          "outside"
+                        ]
+                      },
+                      "format": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
               }
             },
             "required": [
@@ -2840,7 +3214,8 @@
             "label": {
               "type": "string"
             }
-          }
+          },
+          "additionalProperties": false
         }
       ]
     }
