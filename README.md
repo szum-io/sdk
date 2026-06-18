@@ -65,7 +65,7 @@ const chart = await szum.charts.create({
 // Revoke later: await szum.charts.delete(chart.id);
 ```
 
-`create` returns a **chart object** – `{ id, source, title, createdAt, updatedAt, sizeBytes, imageUrl, embedUrl, configUrl }` – and the same shape comes back from `get`, `update`, and each item of `list`. `imageUrl` (`https://szum.io/c/<id>`) renders the same image on every fetch; append `.png`/`.svg` to force a format. `embedUrl` (`https://szum.io/e/<id>`) serves an interactive HTML page with tooltips, legend toggle, and responsive resize.
+`create` returns a **chart object** – `{ id, source, title, createdAt, updatedAt, sizeBytes, publishedAt, imageUrl, embedUrl, configUrl }` – and the same shape comes back from `get`, `update`, `rename`, and each item of `list`. `imageUrl` (`https://szum.io/c/<id>`) renders the same image on every fetch; append `.png`/`.svg` to force a format. `embedUrl` (`https://szum.io/e/<id>`) serves an interactive HTML page with tooltips, legend toggle, and responsive resize. `publishedAt` is an ISO-8601 timestamp, or `null` when the chart's public URLs are dark (an API-created chart is published on create, so it's set).
 
 ### Managing saved charts
 
@@ -74,6 +74,12 @@ Beyond `create` and `delete`, the `charts` resource lets you enumerate and edit:
 ```typescript
 // List your charts, newest first; page via nextCursor
 const { items, nextCursor } = await szum.charts.list({ source: "api" });
+
+// Sort and search; `total` is the exact match count (present only with `q`)
+const { items: hits, total } = await szum.charts.list({
+  sort: "title", // "created" (default), "updated", or "title"
+  q: "revenue", // case-insensitive title substring
+});
 
 // Read one chart's metadata, or its config
 const chart = await szum.charts.get(id);
@@ -89,9 +95,12 @@ await szum.charts.update(id, {
     /* … */
   ],
 });
+
+// Rename – metadata only, no config rewrite, same URLs
+await szum.charts.rename(id, "Q3 revenue by region");
 ```
 
-`list` pages via `nextCursor` (pass it back as `cursor`; `null` on the last page). `getConfigs` returns `{ configs, missing }`; each `missing` entry carries a `reason` – an open set (today `"not_found"` or `"unavailable"`), so match the values you handle and treat anything unfamiliar as a non-fatal skip.
+`list` pages via `nextCursor` (pass it back as `cursor`; `null` on the last page). The `cursor` is keyset-coupled to the active `sort`, so keep `sort` stable while paging one result set. Each item also carries `hasDraft` (the chart has unpublished edits). `getConfigs` returns `{ configs, missing }`; each `missing` entry carries a `reason` – an open set (today `"not_found"` or `"unavailable"`), so match the values you handle and treat anything unfamiliar as a non-fatal skip.
 
 ## Configuration
 
@@ -155,26 +164,28 @@ All errors serialize cleanly via `JSON.stringify(err)` (they implement `toJSON`)
 
 ## Exports
 
-| Export                    | Description                                                                                      |
-| ------------------------- | ------------------------------------------------------------------------------------------------ |
-| `Szum`                    | Client class (`render`; `charts.create`/`list`/`get`/`getConfig`/`getConfigs`/`update`/`delete`) |
-| `SzumOptions`             | Constructor options (`apiKey`, `timeout`, `maxRetries`, …)                                       |
-| `RequestOptions`          | Per-call options (`timeout`, `signal`)                                                           |
-| `SzumError`               | Base error (`code`, `status`, `message`, `retryAfter`, `requestId`)                              |
-| `SzumAuthenticationError` | 401                                                                                              |
-| `SzumPermissionError`     | 403                                                                                              |
-| `SzumInvalidRequestError` | 400 / 413                                                                                        |
-| `SzumRateLimitError`      | 429                                                                                              |
-| `SzumAPIError`            | 5xx                                                                                              |
-| `SzumConnectionError`     | Timeout / network                                                                                |
-| `ChartConfig`             | Config type for SDK methods (`version` optional)                                                 |
-| `ChartConfigInput`        | Full config type including required `version`                                                    |
-| `SavedChart`              | Saved-chart object from `charts.create`/`get`/`update`/`list`                                    |
-| `SavedChartSource`        | Open union of chart origins (`"api"`, `"figma"`, `"app"`, `"mcp"`, …)                            |
-| `SavedChartPage`          | `charts.list` result (`items`, `nextCursor`)                                                     |
-| `SavedChartConfigs`       | `charts.getConfigs` result (`configs`, `missing`)                                                |
-| `ConfigMissingReason`     | Open union: why a config was missing (`"not_found"`, `"unavailable"`, …)                         |
-| `SCHEMA_VERSION`          | Schema version this SDK was built against                                                        |
+| Export                    | Description                                                                                               |
+| ------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `Szum`                    | Client class (`render`; `charts.create`/`list`/`get`/`getConfig`/`getConfigs`/`update`/`rename`/`delete`) |
+| `SzumOptions`             | Constructor options (`apiKey`, `timeout`, `maxRetries`, …)                                                |
+| `RequestOptions`          | Per-call options (`timeout`, `signal`)                                                                    |
+| `SzumError`               | Base error (`code`, `status`, `message`, `retryAfter`, `requestId`)                                       |
+| `SzumAuthenticationError` | 401                                                                                                       |
+| `SzumPermissionError`     | 403                                                                                                       |
+| `SzumInvalidRequestError` | 400 / 413                                                                                                 |
+| `SzumRateLimitError`      | 429                                                                                                       |
+| `SzumAPIError`            | 5xx                                                                                                       |
+| `SzumConnectionError`     | Timeout / network                                                                                         |
+| `ChartConfig`             | Config type for SDK methods (`version` optional)                                                          |
+| `ChartConfigInput`        | Full config type including required `version`                                                             |
+| `SavedChart`              | Saved-chart object from `charts.create`/`get`/`update`/`rename`/`list`                                    |
+| `SavedChartListItem`      | A `charts.list` item: `SavedChart` plus a listing-only `hasDraft` flag                                    |
+| `SavedChartSource`        | Open union of chart origins (`"api"`, `"figma"`, `"app"`, `"mcp"`, …)                                     |
+| `SavedChartSort`          | `charts.list` sort order (`"created"`, `"updated"`, `"title"`)                                            |
+| `SavedChartPage`          | `charts.list` result (`items`, `nextCursor`, optional `total`)                                            |
+| `SavedChartConfigs`       | `charts.getConfigs` result (`configs`, `missing`)                                                         |
+| `ConfigMissingReason`     | Open union: why a config was missing (`"not_found"`, `"unavailable"`, …)                                  |
+| `SCHEMA_VERSION`          | Schema version this SDK was built against                                                                 |
 
 ## Documentation
 

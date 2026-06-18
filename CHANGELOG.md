@@ -8,6 +8,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Nothing yet.
 
+## [3.1.0] - 2026-06-18
+
+### Added
+
+- `charts.rename(id, title)` – rename a chart by id. Metadata-only: the config isn't touched and the id, `/c/`, and `/e/` URLs are unchanged. Returns the updated chart object.
+- `charts.list()` gains two filters: `sort` (`"created"` (default), `"updated"`, or `"title"`) and `q` (case-insensitive title substring search). When `q` is set, the returned page also carries `total` (the exact match count). The `cursor` is keyset-coupled to the active `sort`, so keep `sort` stable while paging.
+- Each `charts.list()` item now carries `hasDraft` (the chart has unpublished edits) on top of the chart object – exposed as the new `SavedChartListItem` type.
+- `SavedChart` gains `publishedAt` – an ISO-8601 publish timestamp, or `null` when the chart's public URLs are dark (a never-published draft, or one that's been unpublished). Returned by `create`, `get`, `update`, `rename`, and each `list` item.
+- Exported types: `SavedChartListItem`, `SavedChartSort`.
+
+### Notes
+
+- Resyncs `src/generated` against the current chart schema (additive `themeOverrides`, `attribution`, `footer`, and mark fields, all within the same `2026-03-20` schema version).
+
 ## [3.0.0] - 2026-06-02
 
 ### Breaking changes
@@ -87,7 +101,8 @@ Nothing yet.
 - `SZUM_DEBUG=true` env var for request/response logging to `stderr`.
 - `SCHEMA_VERSION` export tied to the chart schema version the SDK was built against.
 
-[unreleased]: https://github.com/szum-io/sdk/compare/v3.0.0...HEAD
+[unreleased]: https://github.com/szum-io/sdk/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/szum-io/sdk/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/szum-io/sdk/compare/v2.1.0...v3.0.0
 [2.1.0]: https://github.com/szum-io/sdk/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/szum-io/sdk/compare/v1.0.1...v2.0.0

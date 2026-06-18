@@ -80,3 +80,21 @@ export const requireString = (
 
   return value;
 };
+
+export const requireStringOrNull = (
+  obj: Record<string, unknown>,
+  key: string,
+  response: Response,
+): string | null => {
+  const value = obj[key];
+
+  if (value !== null && typeof value !== "string") {
+    throw new SzumAPIError({
+      message: `Invalid response: missing '${key}' field`,
+      status: response.status,
+      requestId: parseRequestId(response),
+    });
+  }
+
+  return value;
+};

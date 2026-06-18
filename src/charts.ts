@@ -6,6 +6,7 @@ import {
   requireNumber,
   requireObject,
   requireString,
+  requireStringOrNull,
 } from "./json";
 
 type InternalApi = {
@@ -38,6 +39,11 @@ export type SavedChart = {
   /** ISO-8601 timestamp, e.g. "2024-06-01T00:00:00.000Z". */
   updatedAt: string;
   sizeBytes: number;
+  /**
+   * ISO-8601 publish timestamp, or `null` when the chart's public URLs are
+   * dark – a never-published draft, or one that's been unpublished.
+   */
+  publishedAt: string | null;
   /** Rendered-image URL; add `.png`/`.svg` to force a format. */
   imageUrl: string;
   /** Interactive embed URL. */
@@ -46,9 +52,20 @@ export type SavedChart = {
   configUrl: string;
 };
 
+/**
+ * A `list` item: the chart object plus a listing-only `hasDraft` flag (the
+ * chart has unpublished edits). The single-chart methods don't return it.
+ */
+export type SavedChartListItem = SavedChart & { hasDraft: boolean };
+
+/** Sort order for `list`. Defaults to `"created"` (newest first). */
+export type SavedChartSort = "created" | "updated" | "title";
+
 export type SavedChartPage = {
-  items: SavedChart[];
+  items: SavedChartListItem[];
   nextCursor: string | null;
+  /** Exact match count – present only when listing with a `q` search filter. */
+  total?: number;
 };
 
 /**
@@ -85,6 +102,7 @@ const parseSavedChart = (
   const createdAt = requireString(obj, "createdAt", response);
   const updatedAt = requireString(obj, "updatedAt", response);
   const sizeBytes = requireNumber(obj, "sizeBytes", response);
+  const publishedAt = requireStringOrNull(obj, "publishedAt", response);
   const configUrl = requireString(obj, "configUrl", response);
 
   return {
@@ -94,6 +112,7 @@ const parseSavedChart = (
     createdAt,
     updatedAt,
     sizeBytes,
+    publishedAt,
     imageUrl,
     embedUrl,
     configUrl,
@@ -134,14 +153,20 @@ export class SzumCharts {
   }
 
   /**
-   * List your saved charts, newest first. Returns one page plus a `nextCursor`
-   * (pass it back as `cursor` to page on; `null` means the last page). Omit
-   * `source` to list every chart, or filter to one or several of `"figma"` /
-   * `"api"` / `"app"` / `"mcp"`. `limit` defaults to 100 (max 1000).
+   * List your saved charts. Returns one page plus a `nextCursor` (pass it back
+   * as `cursor` to page on; `null` means the last page). Omit `source` to list
+   * every chart, or filter to one or several of `"figma"` / `"api"` / `"app"` /
+   * `"mcp"`. `sort` is `"created"` (default, newest first), `"updated"`, or
+   * `"title"` (A→Z); the `cursor` is keyset-coupled to the sort, so keep `sort`
+   * stable while paging a result set. `q` is a case-insensitive title substring
+   * filter; when set, the page also carries `total` (the exact match count).
+   * `limit` defaults to 100 (max 1000). Each item carries a `hasDraft` flag.
    */
   async list(
     params?: {
       source?: SavedChartSource | SavedChartSource[];
+      sort?: SavedChartSort;
+      q?: string;
       cursor?: string;
       limit?: number;
     },
@@ -157,6 +182,14 @@ export class SzumCharts {
       if (source) {
         search.set("source", source);
       }
+    }
+
+    if (params?.sort) {
+      search.set("sort", params.sort);
+    }
+
+    if (params?.q) {
+      search.set("q", params.q);
     }
 
     if (params?.cursor) {
@@ -178,10 +211,16 @@ export class SzumCharts {
     const items = Array.isArray(obj.items) ? obj.items : [];
 
     return {
-      items: items.map((item) =>
-        parseSavedChart(response, item as Record<string, unknown>),
-      ),
+      items: items.map((item) => {
+        const record = item as Record<string, unknown>;
+
+        return {
+          ...parseSavedChart(response, record),
+          hasDraft: record.hasDraft === true,
+        };
+      }),
       nextCursor: typeof obj.nextCursor === "string" ? obj.nextCursor : null,
+      ...(typeof obj.total === "number" ? { total: obj.total } : {}),
     };
   }
 
@@ -298,6 +337,34 @@ export class SzumCharts {
         method: "PUT",
         body: JSON.stringify({ config: this.api.resolveConfig(config) }),
       },
+      options,
+    );
+
+    return parseSavedChart(response, await parseJsonObject(response));
+  }
+
+  /**
+   * Rename a chart – metadata only. Updates the chart's title without touching
+   * its config, so the id and the `/c/` + `/e/` URLs are unchanged and nothing
+   * is re-rendered or re-published. Returns the updated chart object.
+   */
+  async rename(
+    id: string,
+    title: string,
+    options?: RequestOptions,
+  ): Promise<SavedChart> {
+    assertId(id);
+
+    if (typeof title !== "string") {
+      throw new SzumInvalidRequestError({
+        message: "title must be a string",
+        status: 0,
+      });
+    }
+
+    const response = await this.api.request(
+      `/api/charts/${encodeURIComponent(id)}`,
+      { method: "PATCH", body: JSON.stringify({ title }) },
       options,
     );
 

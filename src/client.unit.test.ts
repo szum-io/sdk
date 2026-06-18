@@ -31,6 +31,7 @@ const CHART_OBJECT = {
   createdAt: "2024-06-01T00:00:00.000Z",
   updatedAt: "2024-06-08T00:00:00.000Z",
   sizeBytes: 412,
+  publishedAt: "2024-06-01T00:00:00.000Z",
   imageUrl: "https://szum.io/c/abc123",
   embedUrl: "https://szum.io/e/abc123",
   configUrl: "https://szum.io/api/charts/abc123/config",
@@ -867,6 +868,55 @@ describe("Szum (unit)", () => {
     });
   });
 
+  describe("charts.rename", () => {
+    it("PATCHes /api/charts/{id} with the title and returns the chart object", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({ body: JSON.stringify(CHART_OBJECT) }),
+      );
+
+      const result = await szum.charts.rename("abc123", "New title");
+
+      const [url, init] = fetchMock.mock.calls[0];
+      expect(url).toBe("https://test.szum.io/api/charts/abc123");
+      expect(init?.method).toBe("PATCH");
+      expect(JSON.parse(init?.body as string)).toEqual({ title: "New title" });
+      expect(result).toEqual(CHART_OBJECT);
+    });
+
+    it("URL-encodes the id", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({ body: JSON.stringify(CHART_OBJECT) }),
+      );
+
+      await szum.charts.rename("abc/../def", "x");
+
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe("https://test.szum.io/api/charts/abc%2F..%2Fdef");
+    });
+
+    it("throws SzumInvalidRequestError when id is empty", async () => {
+      const szum = new Szum({ apiKey: "sk_test" });
+      await expect(szum.charts.rename("", "x")).rejects.toBeInstanceOf(
+        SzumInvalidRequestError,
+      );
+    });
+
+    it("throws SzumInvalidRequestError when title is not a string", async () => {
+      const szum = new Szum({ apiKey: "sk_test" });
+      await expect(
+        szum.charts.rename("abc123", undefined as unknown as string),
+      ).rejects.toBeInstanceOf(SzumInvalidRequestError);
+    });
+  });
+
   describe("charts.list", () => {
     it("GETs /api/charts with source + cursor and returns items + nextCursor", async () => {
       const szum = new Szum({
@@ -875,7 +925,10 @@ describe("Szum (unit)", () => {
       });
       fetchMock.mockResolvedValue(
         createMockResponse({
-          body: JSON.stringify({ items: [CHART_OBJECT], nextCursor: "c1" }),
+          body: JSON.stringify({
+            items: [{ ...CHART_OBJECT, hasDraft: true }],
+            nextCursor: "c1",
+          }),
         }),
       );
 
@@ -890,8 +943,63 @@ describe("Szum (unit)", () => {
         "https://test.szum.io/api/charts?source=api&cursor=prev&limit=100",
       );
       expect(init?.method).toBe("GET");
-      expect(result.items).toEqual([CHART_OBJECT]);
+      expect(result.items).toEqual([{ ...CHART_OBJECT, hasDraft: true }]);
       expect(result.nextCursor).toBe("c1");
+    });
+
+    it("defaults hasDraft to false when the server omits it", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({
+          body: JSON.stringify({ items: [CHART_OBJECT], nextCursor: null }),
+        }),
+      );
+
+      const result = await szum.charts.list();
+
+      expect(result.items).toEqual([{ ...CHART_OBJECT, hasDraft: false }]);
+    });
+
+    it("forwards sort and q, and surfaces total when present", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({
+          body: JSON.stringify({
+            items: [{ ...CHART_OBJECT, hasDraft: false }],
+            nextCursor: null,
+            total: 1,
+          }),
+        }),
+      );
+
+      const result = await szum.charts.list({ sort: "title", q: "revenue" });
+
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe("https://test.szum.io/api/charts?sort=title&q=revenue");
+      expect(result.total).toBe(1);
+    });
+
+    it("omits total when the server does not return it", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({
+          body: JSON.stringify({ items: [], nextCursor: null }),
+        }),
+      );
+
+      const result = await szum.charts.list({ source: "api" });
+
+      expect(result).toEqual({ items: [], nextCursor: null });
+      expect("total" in result).toBe(false);
     });
 
     it("joins multiple sources into a comma-separated source param", async () => {
