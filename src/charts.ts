@@ -1,5 +1,11 @@
 import type { ChartConfig, RequestOptions } from "./client";
 import { SzumError, SzumInvalidRequestError } from "./errors";
+import type {
+  SavedChart,
+  SavedChartListParams,
+  SavedChartPage,
+  SavedChartSource,
+} from "./generated/saved-charts";
 import type { ChartConfigInput } from "./generated/types";
 import {
   parseJsonObject,
@@ -16,56 +22,6 @@ type InternalApi = {
     options?: RequestOptions,
   ) => Promise<Response>;
   resolveConfig: (config: ChartConfig) => ChartConfigInput;
-};
-
-/**
- * Origin of a saved chart. Typed as an **open** union  on purpose – treat it
- * as a string with known values.
- */
-export type SavedChartSource = "api" | "app" | "figma" | "mcp" | (string & {});
-
-/**
- * A saved chart. The same shape is returned by `create`, `get`, `update`, and
- * each item of `list`. The config, rendered image, and interactive embed are
- * addressable sub-resources: fetch the config with `getConfig(id)`, embed the
- * image from `imageUrl`, the interactive version from `embedUrl`.
- */
-export type SavedChart = {
-  id: string;
-  source: SavedChartSource;
-  title: string;
-  /** ISO-8601 timestamp, e.g. "2024-06-01T00:00:00.000Z". */
-  createdAt: string;
-  /** ISO-8601 timestamp, e.g. "2024-06-01T00:00:00.000Z". */
-  updatedAt: string;
-  sizeBytes: number;
-  /**
-   * ISO-8601 publish timestamp, or `null` when the chart's public URLs are
-   * dark – a never-published draft, or one that's been unpublished.
-   */
-  publishedAt: string | null;
-  /** Rendered-image URL; add `.png`/`.svg` to force a format. */
-  imageUrl: string;
-  /** Interactive embed URL. */
-  embedUrl: string;
-  /** Owner-only endpoint that returns this chart's config (`getConfig`). */
-  configUrl: string;
-};
-
-/**
- * A `list` item: the chart object plus a listing-only `hasDraft` flag (the
- * chart has unpublished edits). The single-chart methods don't return it.
- */
-export type SavedChartListItem = SavedChart & { hasDraft: boolean };
-
-/** Sort order for `list`. Defaults to `"created"` (newest first). */
-export type SavedChartSort = "created" | "updated" | "title";
-
-export type SavedChartPage = {
-  items: SavedChartListItem[];
-  nextCursor: string | null;
-  /** Exact match count – present only when listing with a `q` search filter. */
-  total?: number;
 };
 
 /**
@@ -155,21 +111,13 @@ export class SzumCharts {
   /**
    * List your saved charts. Returns one page plus a `nextCursor` (pass it back
    * as `cursor` to page on; `null` means the last page). Omit `source` to list
-   * every chart, or filter to one or several of `"figma"` / `"api"` / `"app"` /
-   * `"mcp"`. `sort` is `"created"` (default, newest first), `"updated"`, or
-   * `"title"` (A→Z); the `cursor` is keyset-coupled to the sort, so keep `sort`
-   * stable while paging a result set. `q` is a case-insensitive title substring
-   * filter; when set, the page also carries `total` (the exact match count).
-   * `limit` defaults to 100 (max 1000). Each item carries a `hasDraft` flag.
+   * every chart. The cursor is coupled to `sort`, so keep the sort stable while
+   * paging. `q` is a case-insensitive title substring filter; when set, the page
+   * also carries `total` (the exact match count). Each item carries a `hasDraft`
+   * flag.
    */
   async list(
-    params?: {
-      source?: SavedChartSource | SavedChartSource[];
-      sort?: SavedChartSort;
-      q?: string;
-      cursor?: string;
-      limit?: number;
-    },
+    params?: SavedChartListParams,
     options?: RequestOptions,
   ): Promise<SavedChartPage> {
     const search = new URLSearchParams();

@@ -1,12 +1,4 @@
-export {
-  type ConfigMissingReason,
-  type SavedChart,
-  type SavedChartConfigs,
-  type SavedChartListItem,
-  type SavedChartPage,
-  type SavedChartSort,
-  type SavedChartSource,
-} from "./charts";
+export { type ConfigMissingReason, type SavedChartConfigs } from "./charts";
 export {
   type RequestOptions,
   type ChartConfig,
@@ -22,5 +14,13 @@ export {
   SzumPermissionError,
   SzumRateLimitError,
 } from "./errors";
+export type {
+  SavedChart,
+  SavedChartListItem,
+  SavedChartListParams,
+  SavedChartPage,
+  SavedChartSort,
+  SavedChartSource,
+} from "./generated/saved-charts";
 export type { ChartConfigInput } from "./generated/types";
 export { SCHEMA_VERSION } from "./generated/version";
