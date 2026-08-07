@@ -8,6 +8,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Nothing yet.
 
+## [3.2.0] - 2026-08-07
+
+### Added
+
+- `locale` in chart configs for locale-aware number and date formatting.
+- `"log"` scales and the `nice` option on X and Y axes.
+- Exported `SavedChartListParams` for `charts.list()` filters and pagination.
+- Anonymous `validateChart()` with generated validation result and diagnostic types.
+- `renderWithMetadata()` for usage headers, content type, and font fallback.
+- `charts.getDocument()` for published config, draft, publication state, and title.
+- Optional `title` support in `charts.create()`.
+- Structured chart diagnostics on `SzumError.issues`.
+
+### Changed
+
+- Generated chart types now expose the supported Google Fonts allowlist for font-family overrides.
+- Chart-schema, saved-chart, validation, and render-metadata types are synchronized from Szum's canonical public contracts.
+- Saved-chart list, document, and batch responses are decoded strictly instead of silently defaulting or dropping malformed fields.
+- Network failures are wrapped as `SzumConnectionError`; safe requests retry retryable create conflicts, gateway failures, and connection failures. Metered renders retry only `429` to avoid a second charge after an ambiguous failure.
+- `"unavailable"` batch results are documented as storage or stored-data failures, not always safe to retry.
+
 ## [3.1.0] - 2026-06-18
 
 ### Added
@@ -101,7 +122,8 @@ Nothing yet.
 - `SZUM_DEBUG=true` env var for request/response logging to `stderr`.
 - `SCHEMA_VERSION` export tied to the chart schema version the SDK was built against.
 
-[unreleased]: https://github.com/szum-io/sdk/compare/v3.1.0...HEAD
+[unreleased]: https://github.com/szum-io/sdk/compare/v3.2.0...HEAD
+[3.2.0]: https://github.com/szum-io/sdk/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/szum-io/sdk/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/szum-io/sdk/compare/v2.1.0...v3.0.0
 [2.1.0]: https://github.com/szum-io/sdk/compare/v2.0.0...v2.1.0
