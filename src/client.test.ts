@@ -21,40 +21,36 @@ const VALID_CONFIG: ChartConfig = {
   ],
 };
 
-describe("Szum (integration)", () => {
-  const szum = new Szum({ apiKey: API_KEY, baseUrl: BASE_URL });
-
+describe.skipIf(!HAS_API_KEY)("Szum (integration)", () => {
   describe("render", () => {
-    it.skipIf(!HAS_API_KEY)(
-      "returns SVG bytes for a valid config",
-      async () => {
-        const result = await szum.render(VALID_CONFIG);
+    it("returns SVG bytes for a valid config", async () => {
+      const szum = new Szum({ apiKey: API_KEY, baseUrl: BASE_URL });
+      const result = await szum.render(VALID_CONFIG);
 
-        expect(result).toBeInstanceOf(Uint8Array);
-        expect(result.byteLength).toBeGreaterThan(0);
+      expect(result).toBeInstanceOf(Uint8Array);
+      expect(result.byteLength).toBeGreaterThan(0);
 
-        const text = new TextDecoder().decode(result);
-        expect(text).toContain("<svg");
-      },
-    );
+      const text = new TextDecoder().decode(result);
+      expect(text).toContain("<svg");
+    });
 
-    it.skipIf(!HAS_API_KEY)(
-      "returns PNG bytes for a valid config",
-      async () => {
-        const result = await szum.render({
-          ...VALID_CONFIG,
-          format: "png" as const,
-        });
+    it("returns PNG bytes for a valid config", async () => {
+      const szum = new Szum({ apiKey: API_KEY, baseUrl: BASE_URL });
+      const result = await szum.render({
+        ...VALID_CONFIG,
+        format: "png" as const,
+      });
 
-        expect(result).toBeInstanceOf(Uint8Array);
-        expect(result.byteLength).toBeGreaterThan(0);
+      expect(result).toBeInstanceOf(Uint8Array);
+      expect(result.byteLength).toBeGreaterThan(0);
 
-        const header = result.slice(0, 4);
-        expect(header).toEqual(new Uint8Array([0x89, 0x50, 0x4e, 0x47]));
-      },
-    );
+      const header = result.slice(0, 4);
+      expect(header).toEqual(new Uint8Array([0x89, 0x50, 0x4e, 0x47]));
+    });
 
-    it.skipIf(!HAS_API_KEY)("throws SzumError on invalid config", async () => {
+    it("throws SzumError on invalid config", async () => {
+      const szum = new Szum({ apiKey: API_KEY, baseUrl: BASE_URL });
+
       try {
         await szum.render({
           version: "2026-03-20",
@@ -83,23 +79,23 @@ describe("Szum (integration)", () => {
   });
 
   describe("charts.create", () => {
-    it.skipIf(!HAS_API_KEY)(
-      "returns the chart object for a valid config",
-      async () => {
-        const result = await szum.charts.create(VALID_CONFIG);
+    it("returns the chart object for a valid config", async () => {
+      const szum = new Szum({ apiKey: API_KEY, baseUrl: BASE_URL });
+      const result = await szum.charts.create(VALID_CONFIG);
 
-        expect(typeof result.imageUrl).toBe("string");
-        expect(result.imageUrl).toMatch(/^https?:\/\//);
-        expect(result.imageUrl).toContain("/c/");
-        expect(typeof result.embedUrl).toBe("string");
-        expect(result.embedUrl).toMatch(/^https?:\/\//);
-        expect(result.embedUrl).toContain("/e/");
-        expect(typeof result.id).toBe("string");
-        expect(result.id.length).toBeGreaterThan(0);
-      },
-    );
+      expect(typeof result.imageUrl).toBe("string");
+      expect(result.imageUrl).toMatch(/^https?:\/\//);
+      expect(result.imageUrl).toContain("/c/");
+      expect(typeof result.embedUrl).toBe("string");
+      expect(result.embedUrl).toMatch(/^https?:\/\//);
+      expect(result.embedUrl).toContain("/e/");
+      expect(typeof result.id).toBe("string");
+      expect(result.id.length).toBeGreaterThan(0);
+    });
 
-    it.skipIf(!HAS_API_KEY)("throws SzumError on invalid config", async () => {
+    it("throws SzumError on invalid config", async () => {
+      const szum = new Szum({ apiKey: API_KEY, baseUrl: BASE_URL });
+
       try {
         await szum.charts.create({
           version: "2026-03-20",
@@ -128,14 +124,12 @@ describe("Szum (integration)", () => {
   });
 
   describe("charts.delete", () => {
-    it.skipIf(!HAS_API_KEY)(
-      "creates a chart and then deletes it by id",
-      async () => {
-        const created = await szum.charts.create(VALID_CONFIG);
-        await szum.charts.delete(created.id);
-        await szum.charts.delete(created.id);
-      },
-    );
+    it("creates a chart and then deletes it by id", async () => {
+      const szum = new Szum({ apiKey: API_KEY, baseUrl: BASE_URL });
+      const created = await szum.charts.create(VALID_CONFIG);
+      await szum.charts.delete(created.id);
+      await szum.charts.delete(created.id);
+    });
 
     it("throws SzumError on invalid API key", async () => {
       const bad = new Szum({ apiKey: "sk_bad", baseUrl: BASE_URL });

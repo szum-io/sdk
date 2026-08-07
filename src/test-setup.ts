@@ -1,6 +1,9 @@
 /// <reference types="node" />
-import { existsSync } from "node:fs";
 
-if (existsSync(".env.local")) {
+try {
   process.loadEnvFile(".env.local");
+} catch (error) {
+  if (!(error instanceof Error && "code" in error && error.code === "ENOENT")) {
+    throw error;
+  }
 }

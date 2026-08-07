@@ -1,7 +1,11 @@
 import type { ChartConfig, RequestOptions } from "./client";
-import { SzumError, SzumInvalidRequestError } from "./errors";
+import { SzumAPIError, SzumError, SzumInvalidRequestError } from "./errors";
 import type {
+  ConfigMissingReason,
   SavedChart,
+  SavedChartConfigs,
+  SavedChartCreateParams,
+  SavedChartDocument,
   SavedChartListParams,
   SavedChartPage,
   SavedChartSource,
@@ -9,11 +13,16 @@ import type {
 import type { ChartConfigInput } from "./generated/types";
 import {
   parseJsonObject,
-  requireNumber,
+  requireArray,
+  requireBoolean,
+  requireNonnegativeInteger,
   requireObject,
+  requireObjectOrNull,
+  requireRecordValue,
   requireString,
   requireStringOrNull,
 } from "./json";
+import { parseRequestId } from "./http";
 
 type InternalApi = {
   request: (
@@ -24,16 +33,7 @@ type InternalApi = {
   resolveConfig: (config: ChartConfig) => ChartConfigInput;
 };
 
-/**
- * Why a requested config wasn't returned: `"not_found"` (unowned or absent) or
- * `"unavailable"` (a transient storage error, safe to retry).
- */
-export type ConfigMissingReason = "not_found" | "unavailable" | (string & {});
-
-export type SavedChartConfigs = {
-  configs: { id: string; config: ChartConfigInput }[];
-  missing: { id: string; reason: ConfigMissingReason }[];
-};
+export type SavedChartCreateOptions = RequestOptions & SavedChartCreateParams;
 
 const assertId = (id: string): void => {
   if (typeof id !== "string" || id.length === 0) {
@@ -57,9 +57,20 @@ const parseSavedChart = (
   const title = requireString(obj, "title", response);
   const createdAt = requireString(obj, "createdAt", response);
   const updatedAt = requireString(obj, "updatedAt", response);
-  const sizeBytes = requireNumber(obj, "sizeBytes", response);
+  const sizeBytes = requireNonnegativeInteger(obj, "sizeBytes", response);
   const publishedAt = requireStringOrNull(obj, "publishedAt", response);
   const configUrl = requireString(obj, "configUrl", response);
+
+  assertIsoTimestamp(response, "createdAt", createdAt);
+  assertIsoTimestamp(response, "updatedAt", updatedAt);
+
+  if (publishedAt !== null) {
+    assertIsoTimestamp(response, "publishedAt", publishedAt);
+  }
+
+  assertAbsoluteUrl(response, "imageUrl", imageUrl);
+  assertAbsoluteUrl(response, "embedUrl", embedUrl);
+  assertAbsoluteUrl(response, "configUrl", configUrl);
 
   return {
     id,
@@ -90,13 +101,23 @@ export class SzumCharts {
    */
   async create(
     config: ChartConfig,
-    options?: RequestOptions,
+    options?: SavedChartCreateOptions,
   ): Promise<SavedChart> {
+    if (options?.title !== undefined && typeof options.title !== "string") {
+      throw new SzumInvalidRequestError({
+        message: "title must be a string",
+        status: 0,
+      });
+    }
+
     const response = await this.api.request(
       "/api/charts",
       {
         method: "POST",
-        body: JSON.stringify({ config: this.api.resolveConfig(config) }),
+        body: JSON.stringify({
+          config: this.api.resolveConfig(config),
+          ...(options?.title !== undefined ? { title: options.title } : {}),
+        }),
       },
       {
         ...options,
@@ -156,19 +177,24 @@ export class SzumCharts {
     );
 
     const obj = await parseJsonObject(response);
-    const items = Array.isArray(obj.items) ? obj.items : [];
+    const items = requireArray(obj, "items", response);
+    const nextCursor = requireStringOrNull(obj, "nextCursor", response);
+    const total =
+      "total" in obj
+        ? requireNonnegativeInteger(obj, "total", response)
+        : undefined;
 
     return {
       items: items.map((item) => {
-        const record = item as Record<string, unknown>;
+        const record = requireRecordValue(item, "items[]", response);
 
         return {
           ...parseSavedChart(response, record),
-          hasDraft: record.hasDraft === true,
+          hasDraft: requireBoolean(record, "hasDraft", response),
         };
       }),
-      nextCursor: typeof obj.nextCursor === "string" ? obj.nextCursor : null,
-      ...(typeof obj.total === "number" ? { total: obj.total } : {}),
+      nextCursor,
+      ...(total !== undefined ? { total } : {}),
     };
   }
 
@@ -192,19 +218,46 @@ export class SzumCharts {
   ): Promise<ChartConfigInput> {
     assertId(id);
 
+    const document = await this.getDocument(id, options);
+
+    if (document.config === null) {
+      throw new SzumAPIError({
+        message:
+          "Chart has no published config. Use charts.getDocument() to read its draft.",
+        status: 200,
+      });
+    }
+
+    return document.config;
+  }
+
+  /** Read a chart's complete owner document, including publication and draft. */
+  async getDocument(
+    id: string,
+    options?: RequestOptions,
+  ): Promise<SavedChartDocument> {
+    assertId(id);
+
     const response = await this.api.request(
       `/api/charts/${encodeURIComponent(id)}/config`,
       { method: "GET" },
       options,
     );
-
     const obj = await parseJsonObject(response);
+    const config = requireObjectOrNull(obj, "config", response);
+    const draft = requireObjectOrNull(obj, "draft", response);
+    const publishedAt = requireStringOrNull(obj, "publishedAt", response);
 
-    return requireObject(
-      obj,
-      "config",
-      response,
-    ) as unknown as ChartConfigInput;
+    if (publishedAt !== null) {
+      assertIsoTimestamp(response, "publishedAt", publishedAt);
+    }
+
+    return {
+      config: config as ChartConfigInput | null,
+      draft: draft as ChartConfigInput | null,
+      publishedAt,
+      title: requireString(obj, "title", response),
+    };
   }
 
   /**
@@ -212,7 +265,7 @@ export class SzumCharts {
    * Returns `{ configs, missing }`: `configs` is `{ id, config }` (order not
    * guaranteed); `missing` lists any requested id that didn't return a config,
    * each with a `reason` – an open set, today `"not_found"` (unowned or absent)
-   * or `"unavailable"` (a transient storage error, safe to retry).
+   * or `"unavailable"` (storage or stored-data unavailable; retry may not help).
    */
   async getConfigs(
     ids: string[],
@@ -225,47 +278,53 @@ export class SzumCharts {
       });
     }
 
+    const uniqueIds = [...new Set(ids)];
+
+    if (uniqueIds.length > 100) {
+      throw new SzumInvalidRequestError({
+        message: "ids must contain at most 100 entries",
+        status: 0,
+      });
+    }
+
+    uniqueIds.forEach(assertId);
+
     const response = await this.api.request(
-      `/api/charts/configs?ids=${encodeURIComponent(ids.join(","))}`,
+      `/api/charts/configs?ids=${encodeURIComponent(uniqueIds.join(","))}`,
       { method: "GET" },
       options,
     );
 
     const obj = await parseJsonObject(response);
-    const rawConfigs = Array.isArray(obj.configs) ? obj.configs : [];
-    const rawMissing = Array.isArray(obj.missing) ? obj.missing : [];
+    const rawConfigs = requireArray(obj, "configs", response);
+    const rawMissing = requireArray(obj, "missing", response);
+    const configs = rawConfigs.map((entry) => {
+      const record = requireRecordValue(entry, "configs[]", response);
+      const id = requireString(record, "id", response);
 
-    const configs = rawConfigs.flatMap((entry) => {
-      if (entry && typeof entry === "object" && !Array.isArray(entry)) {
-        const record = entry as { id?: unknown; config?: unknown };
-
-        if (
-          typeof record.id === "string" &&
-          record.config &&
-          typeof record.config === "object"
-        ) {
-          return [{ id: record.id, config: record.config as ChartConfigInput }];
-        }
-      }
-
-      return [];
+      return {
+        id,
+        config: requireObject(
+          record,
+          "config",
+          response,
+        ) as unknown as ChartConfigInput,
+      };
     });
+    const missing = rawMissing.map((entry) => {
+      const record = requireRecordValue(entry, "missing[]", response);
+      const id = requireString(record, "id", response);
+      const reason = requireString(
+        record,
+        "reason",
+        response,
+      ) as ConfigMissingReason;
 
-    const missing = rawMissing.flatMap((entry) => {
-      if (entry && typeof entry === "object" && !Array.isArray(entry)) {
-        const record = entry as { id?: unknown; reason?: unknown };
-
-        if (typeof record.id === "string") {
-          const reason: ConfigMissingReason =
-            typeof record.reason === "string" && record.reason.length > 0
-              ? record.reason
-              : "not_found";
-
-          return [{ id: record.id, reason }];
-        }
+      if (reason.length === 0) {
+        throw invalidResponseField(response, "reason");
       }
 
-      return [];
+      return { id, reason };
     });
 
     return { configs, missing };
@@ -342,3 +401,42 @@ export class SzumCharts {
     }
   }
 }
+
+const assertIsoTimestamp = (
+  response: Response,
+  field: string,
+  value: string,
+): void => {
+  if (
+    !/^\d{4}-\d{2}-\d{2}T/.test(value) ||
+    !Number.isFinite(Date.parse(value))
+  ) {
+    throw invalidResponseField(response, field);
+  }
+};
+
+const assertAbsoluteUrl = (
+  response: Response,
+  field: string,
+  value: string,
+): void => {
+  try {
+    const url = new URL(value);
+
+    if (url.protocol !== "https:" && url.protocol !== "http:") {
+      throw invalidResponseField(response, field);
+    }
+  } catch {
+    throw invalidResponseField(response, field);
+  }
+};
+
+const invalidResponseField = (
+  response: Response,
+  field: string,
+): SzumAPIError =>
+  new SzumAPIError({
+    message: `Invalid response: missing or invalid '${field}' field`,
+    status: response.status,
+    requestId: parseRequestId(response),
+  });

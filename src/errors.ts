@@ -1,9 +1,12 @@
+import type { ChartDiagnostic } from "./generated/validation";
+
 type SzumErrorParams = {
   message: string;
   status: number;
   retryAfter?: number | null;
   requestId?: string | null;
   code?: string;
+  issues?: ChartDiagnostic[] | null;
 };
 
 type SzumSubclassParams = Omit<SzumErrorParams, "code">;
@@ -13,6 +16,7 @@ export class SzumError extends Error {
   readonly status: number;
   readonly retryAfter: number | null;
   readonly requestId: string | null;
+  readonly issues: ChartDiagnostic[] | null;
 
   constructor({
     message,
@@ -20,6 +24,7 @@ export class SzumError extends Error {
     retryAfter,
     requestId,
     code,
+    issues,
   }: SzumErrorParams) {
     super(message);
     this.name = "SzumError";
@@ -27,6 +32,7 @@ export class SzumError extends Error {
     this.status = status;
     this.retryAfter = retryAfter ?? null;
     this.requestId = requestId ?? null;
+    this.issues = issues ?? null;
   }
 
   toJSON() {
@@ -37,6 +43,7 @@ export class SzumError extends Error {
       status: this.status,
       retryAfter: this.retryAfter,
       requestId: this.requestId,
+      issues: this.issues,
     };
   }
 }

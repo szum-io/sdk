@@ -1,4 +1,5 @@
 import { debug, isDebugEnabled } from "./debug";
+import { parseChartDiagnostics } from "./diagnostics";
 import {
   createSzumError,
   SzumAPIError,
@@ -20,6 +21,8 @@ type FetchOptions = {
   timeout: number;
   maxRetries: number;
   signal?: AbortSignal;
+  acceptedStatuses?: readonly number[];
+  retryMode?: "safe" | "rate-limit-only";
 };
 
 export const fetchWithRetry = async (
@@ -33,7 +36,7 @@ export const fetchWithRetry = async (
     try {
       const response = await fetchWithTimeout(url, init, opts);
 
-      if (!response.ok) {
+      if (!response.ok && !opts.acceptedStatuses?.includes(response.status)) {
         await handleErrorResponse(response);
       }
 
@@ -41,7 +44,10 @@ export const fetchWithRetry = async (
     } catch (err) {
       lastError = err;
 
-      if (!isRetryable(err) || attempt >= opts.maxRetries) {
+      if (
+        !isRetryable(err, opts.retryMode ?? "safe") ||
+        attempt >= opts.maxRetries
+      ) {
         throw err;
       }
 
@@ -108,11 +114,21 @@ const fetchWithTimeout = async (
       });
     }
 
+    if (opts.signal?.aborted) {
+      throw error;
+    }
+
     if (debugEnabled) {
       debug(`← network error (${Date.now() - start}ms)`);
     }
 
-    throw error;
+    throw new SzumConnectionError({
+      message:
+        error instanceof Error && error.message
+          ? `Network request failed: ${error.message}`
+          : "Network request failed",
+      status: 0,
+    });
   } finally {
     clearTimeout(timeoutId);
   }
@@ -120,6 +136,7 @@ const fetchWithTimeout = async (
 
 const handleErrorResponse = async (response: Response): Promise<never> => {
   let message = response.statusText;
+  let issues = null;
 
   try {
     const text = await response.text();
@@ -130,6 +147,8 @@ const handleErrorResponse = async (response: Response): Promise<never> => {
       if (typeof body.error === "string") {
         message = body.error;
       }
+
+      issues = parseChartDiagnostics(body.issues);
     } catch {
       if (text.length > 0) {
         message = text;
@@ -142,6 +161,7 @@ const handleErrorResponse = async (response: Response): Promise<never> => {
     status: response.status,
     retryAfter: parseRetryAfter(response),
     requestId: parseRequestId(response),
+    issues,
   });
 };
 
@@ -165,12 +185,27 @@ const parseRetryAfter = (response: Response): number | null => {
   return null;
 };
 
-const isRetryable = (err: unknown): boolean => {
+const isRetryable = (
+  err: unknown,
+  retryMode: "safe" | "rate-limit-only",
+): boolean => {
+  if (err instanceof SzumRateLimitError) {
+    return true;
+  }
+
+  if (retryMode === "rate-limit-only") {
+    return false;
+  }
+
   if (err instanceof SzumConnectionError) {
     return true;
   }
 
-  if (err instanceof SzumRateLimitError) {
+  if (
+    err instanceof SzumError &&
+    err.status === 409 &&
+    err.retryAfter !== null
+  ) {
     return true;
   }
 
@@ -182,7 +217,7 @@ const isRetryable = (err: unknown): boolean => {
 };
 
 const computeRetryDelay = (attempt: number, err: SzumError): number => {
-  if (err instanceof SzumRateLimitError && err.retryAfter !== null) {
+  if (err.retryAfter !== null) {
     return err.retryAfter * 1000;
   }
 

@@ -1,7 +1,7 @@
 {
   "name": "@szum-io/sdk",
   "version": "3.1.0",
-  "description": "Render charts from a JSON config – SVG or PNG, embeddable in emails, PDFs, Slack, or any <img> tag. Official TypeScript SDK for szum.",
+  "description": "Render charts from a JSON config – SVG or PNG, embeddable in emails, PDFs, Slack, or any <img> tag. Official TypeScript SDK for Szum.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -62,7 +62,8 @@
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --exclude src/client.test.ts",
+    "test:integration": "vitest run src/client.test.ts",
     "knip": "knip",
     "version": "node scripts/sync-version.mjs && git add src/version.ts",
     "prepublishOnly": "node scripts/check-version.mjs && pnpm test && pnpm typecheck && pnpm build",

@@ -1,7 +1,15 @@
 import { SzumCharts } from "./charts";
+import type { RenderMetadata, RenderUsage } from "./generated/render";
 import type { ChartConfigInput } from "./generated/types";
-import { SCHEMA_VERSION } from "./generated/version";
-import { fetchWithRetry, USER_AGENT } from "./http";
+import { SzumAPIError } from "./errors";
+import { fetchWithRetry, parseRequestId, USER_AGENT } from "./http";
+import {
+  assertTransportOptions,
+  DEFAULT_BASE_URL,
+  DEFAULT_MAX_RETRIES,
+  DEFAULT_TIMEOUT,
+  resolveConfig,
+} from "./options";
 
 export type ChartConfig = Omit<ChartConfigInput, "version"> & {
   version?: ChartConfigInput["version"];
@@ -26,9 +34,9 @@ export type RequestOptions = {
   idempotencyKey?: string;
 };
 
-const DEFAULT_BASE_URL = "https://szum.io";
-const DEFAULT_TIMEOUT = 30_000;
-const DEFAULT_MAX_RETRIES = 2;
+export type RenderResult = RenderMetadata & {
+  data: Uint8Array;
+};
 
 export class Szum {
   private readonly apiKey: string;
@@ -48,16 +56,7 @@ export class Szum {
       throw new Error("apiKey is required and must be a non-empty string");
     }
 
-    if (timeout !== undefined && (!Number.isFinite(timeout) || timeout <= 0)) {
-      throw new Error("timeout must be a positive number");
-    }
-
-    if (
-      maxRetries !== undefined &&
-      (!Number.isInteger(maxRetries) || maxRetries < 0)
-    ) {
-      throw new Error("maxRetries must be a non-negative integer");
-    }
+    assertTransportOptions({ timeout, maxRetries });
 
     this.apiKey = apiKey;
     this.baseUrl = baseUrl ?? DEFAULT_BASE_URL;
@@ -66,7 +65,7 @@ export class Szum {
 
     this.charts = new SzumCharts({
       request: (path, init, opts) => this.request(path, init, opts),
-      resolveConfig: (cfg) => this.resolveConfig(cfg),
+      resolveConfig,
     });
   }
 
@@ -74,24 +73,46 @@ export class Szum {
     config: ChartConfig,
     options?: RequestOptions,
   ): Promise<Uint8Array> {
-    const response = await this.request(
+    const response = await this.renderResponse(config, options);
+
+    return new Uint8Array(await response.arrayBuffer());
+  }
+
+  async renderWithMetadata(
+    config: ChartConfig,
+    options?: RequestOptions,
+  ): Promise<RenderResult> {
+    const response = await this.renderResponse(config, options);
+    const buffer = await response.arrayBuffer();
+
+    return {
+      data: new Uint8Array(buffer),
+      contentType: requireHeader(response, "content-type"),
+      fontFallback: parseOptionalTrueHeader(response, "x-font-fallback"),
+      usage: parseRenderUsage(response),
+    };
+  }
+
+  private async renderResponse(
+    config: ChartConfig,
+    options?: RequestOptions,
+  ): Promise<Response> {
+    return this.request(
       "/chart",
       {
         method: "POST",
-        body: JSON.stringify(this.resolveConfig(config)),
+        body: JSON.stringify(resolveConfig(config)),
       },
       options,
+      "rate-limit-only",
     );
-
-    const buffer = await response.arrayBuffer();
-
-    return new Uint8Array(buffer);
   }
 
   private async request(
     path: string,
     init: Omit<RequestInit, "headers">,
     options?: RequestOptions,
+    retryMode: "safe" | "rate-limit-only" = "safe",
   ): Promise<Response> {
     return fetchWithRetry(
       `${this.baseUrl}${path}`,
@@ -100,6 +121,7 @@ export class Szum {
         timeout: options?.timeout ?? this.timeout,
         maxRetries: this.maxRetries,
         signal: options?.signal,
+        retryMode,
       },
     );
   }
@@ -117,11 +139,56 @@ export class Szum {
 
     return headers;
   }
-
-  private resolveConfig(config: ChartConfig): ChartConfigInput {
-    return {
-      ...config,
-      version: config.version ?? SCHEMA_VERSION,
-    } as ChartConfigInput;
-  }
 }
+
+const parseRenderUsage = (response: Response): RenderUsage => ({
+  used: parseUsageHeader(response, "x-usage-used"),
+  limit: parseUsageHeader(response, "x-usage-limit"),
+  remaining: parseUsageHeader(response, "x-usage-remaining"),
+  overage: parseOptionalTrueHeader(response, "x-usage-overage"),
+});
+
+const parseUsageHeader = (response: Response, name: string): number => {
+  const value = requireHeader(response, name);
+  const parsed = /^\d+$/.test(value) ? Number(value) : Number.NaN;
+
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    throw invalidResponseHeader(response, name);
+  }
+
+  return parsed;
+};
+
+const parseOptionalTrueHeader = (response: Response, name: string): boolean => {
+  const value = response.headers.get(name);
+
+  if (value === null) {
+    return false;
+  }
+
+  if (value !== "true") {
+    throw invalidResponseHeader(response, name);
+  }
+
+  return true;
+};
+
+const requireHeader = (response: Response, name: string): string => {
+  const value = response.headers.get(name);
+
+  if (!value) {
+    throw invalidResponseHeader(response, name);
+  }
+
+  return value;
+};
+
+const invalidResponseHeader = (
+  response: Response,
+  name: string,
+): SzumAPIError =>
+  new SzumAPIError({
+    message: `Invalid response: missing or invalid '${name}' header`,
+    status: response.status,
+    requestId: parseRequestId(response),
+  });
