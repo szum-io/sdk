@@ -6,7 +6,104 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-Nothing yet.
+### Breaking changes
+
+- The minimum supported Node.js version is now 24.
+- Automatic sizing is bounded by the shared renderer without dropping source rows.
+
+- HTTP failures use a structured `error` object and a single `diagnostics` list, aligned with MCP. `SzumError.issues` is replaced by `diagnostics`; `failure` retains the complete validated response and server error codes survive subclass selection. Completed validation results remain distinct from operational failures.
+
+- Replaced the `2026-03-20` mark-list grammar with the purpose-based `2026-09-26` chart contract. `ChartConfig`, `ChartConfigInput`, and `SCHEMA_VERSION` now describe the new active vocabulary.
+- Theme categorical palettes and sequential or diverging ranges now author one complete array per scheme: a bare array applies to both schemes, while `{ light, dark }` may provide either or both complete arrays. Scalar colors retain their per-color Light/Dark form.
+- Sequential color ranges accept two or three stops, while diverging ranges accept three or five, across chart encodings and theme overrides.
+- `render()` and `renderWithMetadata()` now accept a complete `ChartDocument` (`config` plus `data`, with optional size, output, and presentation policy) instead of a config that owns mark data and output fields.
+- Saved-chart writes now accept the same complete document: `charts.create(document)` and `charts.update(id, document)`. Current authored and generated input types are exported as `ChartDocument` and `ChartDocumentInput`.
+- Replaced config reads with document reads: `charts.getDocument()` is now `charts.getDocumentState()`, and `charts.getConfigs()` is now `charts.getDocuments()`. `charts.getConfig()` is removed because document state is the durable resource.
+- Saved-chart metadata now exposes `documentUrl` instead of `configUrl`, and validation returns `suggestedDocument` instead of `suggestedConfig`.
+
+### Changed
+
+- Generated chart-document, saved-chart, validation, diagnostic, and render-metadata types are synchronized from the current public contracts.
+- `validateChart()` accepts the same current document used for rendering and saving and preserves its document-oriented diagnostic projection.
+
+### Fixed
+
+- Preserve and validate compatibility classifications and loss codes; decode suggested and saved documents against generated current schemas instead of casting untrusted objects.
+- Keep request timeouts active through response bodies, wrap body connection failures, and clean up cancellation listeners after retry waits.
+- Reject blank create idempotency keys, invalid per-call timeouts, and batch replies that omit, duplicate, or substitute requested chart IDs.
+- Honor numeric and HTTP-date `Retry-After` values without timer overflow; normalize trailing slashes in custom base URLs.
+
+### Migration from 3.x
+
+SDK 4 requires Node.js 24 or newer and implements the `2026-09-26` chart contract. A 3.x config cannot be upgraded by changing its version string, and the SDK does not rewrite retained chart definitions automatically.
+
+In 3.x, configuration, data, and output lived in one mark-oriented config:
+
+```typescript
+const config = {
+  version: "2026-03-20",
+  format: "png",
+  theme: "editorial",
+  marks: [
+    {
+      type: "barY",
+      data: [
+        { x: "Q1", y: 4.2 },
+        { x: "Q2", y: 5.1 },
+      ],
+    },
+  ],
+};
+
+await szum.render(config);
+await szum.charts.create(config);
+```
+
+In 4.0, one purpose-based `ChartDocument` is shared by validation, rendering, and saved-chart writes:
+
+```typescript
+import type { ChartDocument } from "@szum-io/sdk";
+
+const document = {
+  config: {
+    type: "column",
+    theme: "editorial",
+    category: { field: "quarter" },
+    values: { type: "long", field: "revenue" },
+  },
+  data: [
+    { quarter: "Q1", revenue: 4.2 },
+    { quarter: "Q2", revenue: 5.1 },
+  ],
+  output: { format: "png" },
+} satisfies ChartDocument;
+
+await szum.render(document);
+await szum.charts.create(document);
+```
+
+Update each renamed API and response field:
+
+| 3.x                          | 4.0                                              |
+| ---------------------------- | ------------------------------------------------ |
+| `render(config)`             | `render(document)`                               |
+| `renderWithMetadata(config)` | `renderWithMetadata(document)`                   |
+| `validateChart(config)`      | `validateChart(document)`                        |
+| `charts.create(config)`      | `charts.create(document)`                        |
+| `charts.update(id, config)`  | `charts.update(id, document)`                    |
+| `charts.getConfig(id)`       | `(await charts.getDocumentState(id)).document`   |
+| `charts.getDocument(id)`     | `charts.getDocumentState(id)`                    |
+| `charts.getConfigs(ids)`     | `charts.getDocuments(ids)`                       |
+| `configUrl`                  | `documentUrl`                                    |
+| `suggestedConfig`            | `suggestedDocument`                              |
+| validation `errors`          | `diagnostics` filtered by `severity === "error"` |
+| `SzumError.issues`           | `SzumError.diagnostics`                          |
+
+`ChartConfig` is now data-free. Use authored `ChartDocument` when versions may be omitted and generated `ChartDocumentInput` when both the document and nested config versions must be explicit.
+
+Errors preserve the validated failure envelope on `SzumError.failure`. Use the broad error subclass for transport handling, then inspect `error.code` for operation-specific cases such as `not_found`, `conflict`, `limit_reached`, or `validation_failed`; `error.retryable` reports the server's retry classification.
+
+Review custom color configuration during conversion. Scalar colors may still provide independent `light` and `dark` members. Theme categorical palettes and continuous ranges instead provide one complete array per authored scheme. Sequential ranges accept two or three stops; diverging ranges accept three or five.
 
 ## [3.2.0] - 2026-08-07
 

@@ -1,16 +1,17 @@
-import type { ChartConfig, RequestOptions } from "./client";
+import type { ChartDocument, RequestOptions } from "./contracts";
 import { SzumAPIError, SzumError, SzumInvalidRequestError } from "./errors";
 import type {
-  ConfigMissingReason,
+  DocumentMissingReason,
   SavedChart,
-  SavedChartConfigs,
+  SavedChartDocuments,
   SavedChartCreateParams,
-  SavedChartDocument,
+  SavedChartDocumentState,
   SavedChartListParams,
   SavedChartPage,
   SavedChartSource,
 } from "./generated/saved-charts";
-import type { ChartConfigInput } from "./generated/types";
+import type { ChartDocumentInput } from "./generated/document";
+import { isChartDocument } from "./generated/response-validators.js";
 import {
   parseJsonObject,
   requireArray,
@@ -30,7 +31,7 @@ type InternalApi = {
     init: Omit<RequestInit, "headers">,
     options?: RequestOptions,
   ) => Promise<Response>;
-  resolveConfig: (config: ChartConfig) => ChartConfigInput;
+  resolveDocument: (document: ChartDocument) => ChartDocumentInput;
 };
 
 export type SavedChartCreateOptions = RequestOptions & SavedChartCreateParams;
@@ -59,7 +60,7 @@ const parseSavedChart = (
   const updatedAt = requireString(obj, "updatedAt", response);
   const sizeBytes = requireNonnegativeInteger(obj, "sizeBytes", response);
   const publishedAt = requireStringOrNull(obj, "publishedAt", response);
-  const configUrl = requireString(obj, "configUrl", response);
+  const documentUrl = requireString(obj, "documentUrl", response);
 
   assertIsoTimestamp(response, "createdAt", createdAt);
   assertIsoTimestamp(response, "updatedAt", updatedAt);
@@ -70,7 +71,7 @@ const parseSavedChart = (
 
   assertAbsoluteUrl(response, "imageUrl", imageUrl);
   assertAbsoluteUrl(response, "embedUrl", embedUrl);
-  assertAbsoluteUrl(response, "configUrl", configUrl);
+  assertAbsoluteUrl(response, "documentUrl", documentUrl);
 
   return {
     id,
@@ -82,7 +83,7 @@ const parseSavedChart = (
     publishedAt,
     imageUrl,
     embedUrl,
-    configUrl,
+    documentUrl,
   };
 };
 
@@ -94,15 +95,26 @@ export class SzumCharts {
   }
 
   /**
-   * Save a config server-side; returns the created chart. Retry-safe: an
+   * Save a document server-side; returns the created chart. Retry-safe: an
    * `Idempotency-Key` is generated per call (and reused across this call's
    * automatic retries), so a committed-but-timed-out create can't produce a
    * duplicate. Pass `options.idempotencyKey` to dedupe across separate calls.
    */
   async create(
-    config: ChartConfig,
+    document: ChartDocument,
     options?: SavedChartCreateOptions,
   ): Promise<SavedChart> {
+    if (
+      options?.idempotencyKey !== undefined &&
+      (typeof options.idempotencyKey !== "string" ||
+        options.idempotencyKey.trim().length === 0)
+    ) {
+      throw new SzumInvalidRequestError({
+        message: "idempotencyKey must be a non-empty string",
+        status: 0,
+      });
+    }
+
     if (options?.title !== undefined && typeof options.title !== "string") {
       throw new SzumInvalidRequestError({
         message: "title must be a string",
@@ -115,7 +127,7 @@ export class SzumCharts {
       {
         method: "POST",
         body: JSON.stringify({
-          config: this.api.resolveConfig(config),
+          document: this.api.resolveDocument(document),
           ...(options?.title !== undefined ? { title: options.title } : {}),
         }),
       },
@@ -211,40 +223,20 @@ export class SzumCharts {
     return parseSavedChart(response, await parseJsonObject(response));
   }
 
-  /** Read a chart's config. */
-  async getConfig(
-    id: string,
-    options?: RequestOptions,
-  ): Promise<ChartConfigInput> {
-    assertId(id);
-
-    const document = await this.getDocument(id, options);
-
-    if (document.config === null) {
-      throw new SzumAPIError({
-        message:
-          "Chart has no published config. Use charts.getDocument() to read its draft.",
-        status: 200,
-      });
-    }
-
-    return document.config;
-  }
-
   /** Read a chart's complete owner document, including publication and draft. */
-  async getDocument(
+  async getDocumentState(
     id: string,
     options?: RequestOptions,
-  ): Promise<SavedChartDocument> {
+  ): Promise<SavedChartDocumentState> {
     assertId(id);
 
     const response = await this.api.request(
-      `/api/charts/${encodeURIComponent(id)}/config`,
+      `/api/charts/${encodeURIComponent(id)}/document`,
       { method: "GET" },
       options,
     );
     const obj = await parseJsonObject(response);
-    const config = requireObjectOrNull(obj, "config", response);
+    const document = requireObjectOrNull(obj, "document", response);
     const draft = requireObjectOrNull(obj, "draft", response);
     const publishedAt = requireStringOrNull(obj, "publishedAt", response);
 
@@ -253,24 +245,24 @@ export class SzumCharts {
     }
 
     return {
-      config: config as ChartConfigInput | null,
-      draft: draft as ChartConfigInput | null,
+      document: document === null ? null : parseDocument(document, response),
+      draft: draft === null ? null : parseDocument(draft, response),
       publishedAt,
       title: requireString(obj, "title", response),
     };
   }
 
   /**
-   * Read several charts' configs in one request (max 100 ids). Owner-only.
-   * Returns `{ configs, missing }`: `configs` is `{ id, config }` (order not
-   * guaranteed); `missing` lists any requested id that didn't return a config,
+   * Read several charts' preview documents in one request (max 100 ids).
+   * Returns `{ documents, missing }`: `documents` is `{ id, document }` (order not
+   * guaranteed); `missing` lists any requested id that didn't return a document,
    * each with a `reason` – an open set, today `"not_found"` (unowned or absent)
    * or `"unavailable"` (storage or stored-data unavailable; retry may not help).
    */
-  async getConfigs(
+  async getDocuments(
     ids: string[],
     options?: RequestOptions,
-  ): Promise<SavedChartConfigs> {
+  ): Promise<SavedChartDocuments> {
     if (!Array.isArray(ids) || ids.length === 0) {
       throw new SzumInvalidRequestError({
         message: "ids must be a non-empty array",
@@ -289,26 +281,32 @@ export class SzumCharts {
 
     uniqueIds.forEach(assertId);
 
+    if (uniqueIds.some((id) => id.includes(",") || id.trim() !== id)) {
+      throw new SzumInvalidRequestError({
+        message: "ids must not contain commas or surrounding whitespace",
+        status: 0,
+      });
+    }
+
     const response = await this.api.request(
-      `/api/charts/configs?ids=${encodeURIComponent(uniqueIds.join(","))}`,
+      `/api/charts/documents?ids=${encodeURIComponent(uniqueIds.join(","))}`,
       { method: "GET" },
       options,
     );
 
     const obj = await parseJsonObject(response);
-    const rawConfigs = requireArray(obj, "configs", response);
+    const rawDocuments = requireArray(obj, "documents", response);
     const rawMissing = requireArray(obj, "missing", response);
-    const configs = rawConfigs.map((entry) => {
-      const record = requireRecordValue(entry, "configs[]", response);
+    const documents = rawDocuments.map((entry) => {
+      const record = requireRecordValue(entry, "documents[]", response);
       const id = requireString(record, "id", response);
 
       return {
         id,
-        config: requireObject(
-          record,
-          "config",
+        document: parseDocument(
+          requireObject(record, "document", response),
           response,
-        ) as unknown as ChartConfigInput,
+        ),
       };
     });
     const missing = rawMissing.map((entry) => {
@@ -318,7 +316,7 @@ export class SzumCharts {
         record,
         "reason",
         response,
-      ) as ConfigMissingReason;
+      ) as DocumentMissingReason;
 
       if (reason.length === 0) {
         throw invalidResponseField(response, "reason");
@@ -327,22 +325,32 @@ export class SzumCharts {
       return { id, reason };
     });
 
-    return { configs, missing };
+    const returnedIds = [...documents, ...missing].map(({ id }) => id);
+
+    if (
+      returnedIds.length !== uniqueIds.length ||
+      new Set(returnedIds).size !== uniqueIds.length ||
+      returnedIds.some((id) => !uniqueIds.includes(id))
+    ) {
+      throw invalidResponseField(response, "documents/missing ids");
+    }
+
+    return { documents, missing };
   }
 
-  /** Replace a chart's config in place (same id, stable URLs). */
+  /** Replace a chart's document in place (same id, stable URLs). */
   async update(
     id: string,
-    config: ChartConfig,
+    document: ChartDocument,
     options?: RequestOptions,
   ): Promise<SavedChart> {
     assertId(id);
 
     const response = await this.api.request(
-      `/api/charts/${encodeURIComponent(id)}/config`,
+      `/api/charts/${encodeURIComponent(id)}/document`,
       {
         method: "PUT",
-        body: JSON.stringify({ config: this.api.resolveConfig(config) }),
+        body: JSON.stringify({ document: this.api.resolveDocument(document) }),
       },
       options,
     );
@@ -352,7 +360,7 @@ export class SzumCharts {
 
   /**
    * Rename a chart – metadata only. Updates the chart's title without touching
-   * its config, so the id and the `/c/` + `/e/` URLs are unchanged and nothing
+   * its document, so the id and the `/c/` + `/e/` URLs are unchanged and nothing
    * is re-rendered or re-published. Returns the updated chart object.
    */
   async rename(
@@ -401,6 +409,17 @@ export class SzumCharts {
     }
   }
 }
+
+const parseDocument = (
+  value: unknown,
+  response: Response,
+): ChartDocumentInput => {
+  if (!isChartDocument(value)) {
+    throw invalidResponseField(response, "document");
+  }
+
+  return value;
+};
 
 const assertIsoTimestamp = (
   response: Response,

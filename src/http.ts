@@ -1,5 +1,4 @@
 import { debug, isDebugEnabled } from "./debug";
-import { parseChartDiagnostics } from "./diagnostics";
 import {
   createSzumError,
   SzumAPIError,
@@ -8,6 +7,9 @@ import {
   SzumRateLimitError,
 } from "./errors";
 import { SDK_VERSION } from "./version";
+import { isApiFailure } from "./generated/response-validators.js";
+import type { ApiFailure } from "./generated/failure";
+import { assertTransportOptions, MAX_TIMER_MS } from "./options";
 
 const RETRY_BASE_MS = 500;
 const RETRY_CAP_MS = 30_000;
@@ -30,6 +32,8 @@ export const fetchWithRetry = async (
   init: RequestInit,
   opts: FetchOptions,
 ): Promise<Response> => {
+  assertTransportOptions(opts);
+  opts.signal?.throwIfAborted();
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= opts.maxRetries; attempt++) {
@@ -45,6 +49,7 @@ export const fetchWithRetry = async (
       lastError = err;
 
       if (
+        opts.signal?.aborted ||
         !isRetryable(err, opts.retryMode ?? "safe") ||
         attempt >= opts.maxRetries
       ) {
@@ -86,24 +91,34 @@ const fetchWithTimeout = async (
   try {
     const response = await fetch(url, {
       ...init,
-      signal: combineSignals(controller.signal, opts.signal),
+      signal: opts.signal
+        ? AbortSignal.any([controller.signal, opts.signal])
+        : controller.signal,
     });
+    const body = await response.arrayBuffer();
 
     if (debugEnabled) {
       debug(`← ${response.status} (${Date.now() - start}ms)`);
     }
 
-    return response;
+    return new Response(
+      response.status === 204 ||
+        response.status === 205 ||
+        response.status === 304
+        ? null
+        : body,
+      {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+      },
+    );
   } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") {
-      if (opts.signal?.aborted) {
-        if (debugEnabled) {
-          debug(`← aborted by caller (${Date.now() - start}ms)`);
-        }
+    if (opts.signal?.aborted) {
+      throw opts.signal.reason;
+    }
 
-        throw error;
-      }
-
+    if (controller.signal.aborted) {
       if (debugEnabled) {
         debug(`← timeout after ${timeout}ms`);
       }
@@ -112,10 +127,6 @@ const fetchWithTimeout = async (
         message: `Request timed out after ${timeout}ms`,
         status: 0,
       });
-    }
-
-    if (opts.signal?.aborted) {
-      throw error;
     }
 
     if (debugEnabled) {
@@ -135,20 +146,20 @@ const fetchWithTimeout = async (
 };
 
 const handleErrorResponse = async (response: Response): Promise<never> => {
-  let message = response.statusText;
-  let issues = null;
+  let message =
+    response.statusText || `Request failed with HTTP ${response.status}`;
+  let failure: ApiFailure | null = null;
 
   try {
     const text = await response.text();
 
     try {
-      const body = JSON.parse(text) as Record<string, unknown>;
+      const body: unknown = JSON.parse(text);
 
-      if (typeof body.error === "string") {
-        message = body.error;
+      if (isApiFailure(body)) {
+        message = body.error.message;
+        failure = body;
       }
-
-      issues = parseChartDiagnostics(body.issues);
     } catch {
       if (text.length > 0) {
         message = text;
@@ -161,7 +172,7 @@ const handleErrorResponse = async (response: Response): Promise<never> => {
     status: response.status,
     retryAfter: parseRetryAfter(response),
     requestId: parseRequestId(response),
-    issues,
+    failure,
   });
 };
 
@@ -176,19 +187,28 @@ const parseRetryAfter = (response: Response): number | null => {
     return null;
   }
 
-  const seconds = parseInt(header, 10);
+  if (/^\d+$/.test(header)) {
+    const seconds = Number(header);
 
-  if (Number.isFinite(seconds) && seconds > 0) {
-    return seconds;
+    return Number.isSafeInteger(seconds) ? seconds : null;
   }
 
-  return null;
+  const date = header.endsWith("GMT") ? header : `${header} GMT`;
+  const timestamp = /^[A-Za-z]+,? /.test(header) ? Date.parse(date) : NaN;
+
+  return Number.isFinite(timestamp)
+    ? Math.max(0, Math.ceil((timestamp - Date.now()) / 1000))
+    : null;
 };
 
 const isRetryable = (
   err: unknown,
   retryMode: "safe" | "rate-limit-only",
 ): boolean => {
+  if (err instanceof SzumError && err.retryable === false) {
+    return false;
+  }
+
   if (err instanceof SzumRateLimitError) {
     return true;
   }
@@ -227,47 +247,26 @@ const computeRetryDelay = (attempt: number, err: SzumError): number => {
   return Math.max(0, exp + jitter);
 };
 
-const combineSignals = (
-  a: AbortSignal,
-  b: AbortSignal | undefined,
-): AbortSignal => {
-  if (!b) {
-    return a;
-  }
+const sleep = async (ms: number, signal?: AbortSignal): Promise<void> => {
+  for (let remaining = ms; remaining > 0; remaining -= MAX_TIMER_MS) {
+    signal?.throwIfAborted();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let onAbort: (() => void) | undefined;
 
-  if (a.aborted) {
-    return a;
-  }
+    try {
+      await new Promise<void>((resolve, reject) => {
+        onAbort = () => reject(signal?.reason);
+        signal?.addEventListener("abort", onAbort, { once: true });
+        timer = setTimeout(resolve, Math.min(remaining, MAX_TIMER_MS));
+      });
+    } finally {
+      clearTimeout(timer);
 
-  if (b.aborted) {
-    return b;
-  }
-
-  const controller = new AbortController();
-
-  a.addEventListener("abort", () => controller.abort(a.reason), { once: true });
-  b.addEventListener("abort", () => controller.abort(b.reason), { once: true });
-
-  return controller.signal;
-};
-
-const sleep = (ms: number, signal?: AbortSignal): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    if (signal?.aborted) {
-      reject(signal.reason);
-
-      return;
+      if (onAbort) {
+        signal?.removeEventListener("abort", onAbort);
+      }
     }
+  }
 
-    const timer = setTimeout(resolve, ms);
-
-    signal?.addEventListener(
-      "abort",
-      () => {
-        clearTimeout(timer);
-        reject(signal.reason);
-      },
-      { once: true },
-    );
-  });
+  signal?.throwIfAborted();
 };

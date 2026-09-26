@@ -31,13 +31,13 @@ describe("SzumError base class", () => {
     expect(err.code).toBe("custom_code");
   });
 
-  it("defaults retryAfter, requestId, and issues to null", () => {
+  it("defaults retryAfter, requestId, and diagnostics to null", () => {
     const err = new SzumError({ message: "x", status: 0 });
 
     expect(err.retryAfter).toBeNull();
     expect(err.requestId).toBeNull();
     expect(err.code).toBe("unknown_error");
-    expect(err.issues).toBeNull();
+    expect(err.diagnostics).toBeNull();
   });
 
   it("serializes via toJSON with all fields", () => {
@@ -46,7 +46,7 @@ describe("SzumError base class", () => {
       status: 400,
       retryAfter: 5,
       requestId: "req_xyz",
-      issues: null,
+      diagnostics: null,
       code: "invalid_request",
     });
 
@@ -59,7 +59,9 @@ describe("SzumError base class", () => {
       status: 400,
       retryAfter: 5,
       requestId: "req_xyz",
-      issues: null,
+      diagnostics: null,
+      retryable: null,
+      failure: null,
     });
   });
 });

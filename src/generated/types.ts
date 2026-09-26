@@ -1,3 +1,553 @@
+export type ChartConfigInput =
+  | {
+      version: "2026-09-26";
+      title?: string;
+      subtitle?: string;
+      accessibilityDescription?: string;
+      caption?: string;
+      headerAlign?: "start" | "center" | "end";
+      locale?: string;
+      theme?: ThemeName;
+      themeOverrides?: ThemeOverrides;
+      plotBorder?: boolean;
+      order?: CategoryOrder;
+      categoryAxis?: AxisOptions;
+      valueAxis?: AxisOptions;
+      color?: CategoricalColor;
+      annotations?: CartesianAnnotations;
+      references?: CategoricalReferences;
+      category: BarCategoryRole;
+      line?: PromotedLine;
+      cornerRadius?: number;
+      stroke?: Stroke;
+      values: SimpleBarValuesRole;
+      spacing?: CategorySpacing;
+      labels?: PositionableBarLabels;
+      type: "column";
+    }
+  | {
+      version: "2026-09-26";
+      title?: string;
+      subtitle?: string;
+      accessibilityDescription?: string;
+      caption?: string;
+      headerAlign?: "start" | "center" | "end";
+      locale?: string;
+      theme?: ThemeName;
+      themeOverrides?: ThemeOverrides;
+      plotBorder?: boolean;
+      category: RangeCategoryRole;
+      values: RangeValuesRole;
+      order?: RangeCategoryOrder;
+      categoryAxis?: AxisOptions;
+      valueAxis?: AxisOptions;
+      color?: CategoricalColor;
+      spacing?: CategorySpacing;
+      cornerRadius?: number;
+      stroke?: Stroke;
+      type: "column";
+    }
+  | {
+      version: "2026-09-26";
+      title?: string;
+      subtitle?: string;
+      accessibilityDescription?: string;
+      caption?: string;
+      headerAlign?: "start" | "center" | "end";
+      locale?: string;
+      theme?: ThemeName;
+      themeOverrides?: ThemeOverrides;
+      plotBorder?: boolean;
+      order?: CategoryOrder;
+      categoryAxis?: AxisOptions;
+      valueAxis?: AxisOptions;
+      color?: CategoricalColor;
+      annotations?: CartesianAnnotations;
+      references?: CategoricalReferences;
+      category: BarCategoryRole;
+      line?: PromotedLine;
+      cornerRadius?: number;
+      stroke?: Stroke;
+      values: SeriesLinearValuesRoleWithPercent;
+      arrangement?: StackedArrangement;
+      spacing?: CategorySpacing;
+      labels?: StackedBarLabels;
+      type: "column";
+    }
+  | {
+      version: "2026-09-26";
+      title?: string;
+      subtitle?: string;
+      accessibilityDescription?: string;
+      caption?: string;
+      headerAlign?: "start" | "center" | "end";
+      locale?: string;
+      theme?: ThemeName;
+      themeOverrides?: ThemeOverrides;
+      plotBorder?: boolean;
+      order?: CategoryOrder;
+      categoryAxis?: AxisOptions;
+      valueAxis?: AxisOptions;
+      color?: CategoricalColor;
+      annotations?: CartesianAnnotations;
+      references?: CategoricalReferences;
+      category: BarCategoryRole;
+      line?: PromotedLine;
+      cornerRadius?: number;
+      stroke?: Stroke;
+      values: SeriesLinearValuesRoleWithPercent;
+      arrangement?: StackedArrangement;
+      spacing?: CategorySpacing;
+      labels?: StackedBarLabels;
+      totals: boolean;
+      type: "column";
+    }
+  | {
+      version: "2026-09-26";
+      title?: string;
+      subtitle?: string;
+      accessibilityDescription?: string;
+      caption?: string;
+      headerAlign?: "start" | "center" | "end";
+      locale?: string;
+      theme?: ThemeName;
+      themeOverrides?: ThemeOverrides;
+      plotBorder?: boolean;
+      order?: CategoryOrder;
+      categoryAxis?: AxisOptions;
+      valueAxis?: AxisOptions;
+      color?: CategoricalColorMapping;
+      annotations?: CartesianAnnotations;
+      references?: CategoricalReferences;
+      category: BarCategoryRole;
+      line?: PromotedLine;
+      cornerRadius?: number;
+      stroke?: Stroke;
+      values: SeriesLinearValuesRole;
+      arrangement: GroupedArrangement;
+      spacing?: BarSpacingPreference;
+      labels?: PositionableBarLabels;
+      type: "column";
+    }
+  | {
+      version: "2026-09-26";
+      title?: string;
+      subtitle?: string;
+      accessibilityDescription?: string;
+      caption?: string;
+      headerAlign?: "start" | "center" | "end";
+      locale?: string;
+      theme?: ThemeName;
+      themeOverrides?: ThemeOverrides;
+      plotBorder?: boolean;
+      order?: CategoryOrder;
+      categoryAxis?: AxisOptions;
+      valueAxis?: AxisOptions;
+      color?: CategoricalColorMapping;
+      annotations?: CartesianAnnotations;
+      references?: CategoricalReferences;
+      category: BarCategoryRole;
+      line?: PromotedLine;
+      cornerRadius?: number;
+      stroke?: Stroke;
+      values: SeriesLinearValuesRoleWithPercent;
+      arrangement: NormalizedArrangement;
+      spacing?: CategorySpacing;
+      labels?: StackedBarLabels;
+      type: "column";
+    }
+  | {
+      version: "2026-09-26";
+      title?: string;
+      subtitle?: string;
+      accessibilityDescription?: string;
+      caption?: string;
+      headerAlign?: "start" | "center" | "end";
+      locale?: string;
+      theme?: ThemeName;
+      themeOverrides?: ThemeOverrides;
+      plotBorder?: boolean;
+      order?: CategoryOrder;
+      categoryAxis?: AxisOptions;
+      valueAxis?: AxisOptions;
+      color?: CategoricalColor;
+      annotations?: CartesianAnnotations;
+      references?: CategoricalReferences;
+      category: BarCategoryRole;
+      line?: PromotedLine;
+      cornerRadius?: number;
+      stroke?: Stroke;
+      values: SimpleBarValuesRole;
+      spacing?: CategorySpacing;
+      labels?: PositionableBarLabels;
+      type: "bar";
+    }
+  | {
+      version: "2026-09-26";
+      title?: string;
+      subtitle?: string;
+      accessibilityDescription?: string;
+      caption?: string;
+      headerAlign?: "start" | "center" | "end";
+      locale?: string;
+      theme?: ThemeName;
+      themeOverrides?: ThemeOverrides;
+      plotBorder?: boolean;
+      category: RangeCategoryRole;
+      values: RangeValuesRole;
+      order?: RangeCategoryOrder;
+      categoryAxis?: AxisOptions;
+      valueAxis?: AxisOptions;
+      color?: CategoricalColor;
+      spacing?: CategorySpacing;
+      cornerRadius?: number;
+      stroke?: Stroke;
+      type: "bar";
+    }
+  | {
+      version: "2026-09-26";
+      title?: string;
+      subtitle?: string;
+      accessibilityDescription?: string;
+      caption?: string;
+      headerAlign?: "start" | "center" | "end";
+      locale?: string;
+      theme?: ThemeName;
+      themeOverrides?: ThemeOverrides;
+      plotBorder?: boolean;
+      order?: CategoryOrder;
+      categoryAxis?: AxisOptions;
+      valueAxis?: AxisOptions;
+      color?: CategoricalColor;
+      annotations?: CartesianAnnotations;
+      references?: CategoricalReferences;
+      category: BarCategoryRole;
+      line?: PromotedLine;
+      cornerRadius?: number;
+      stroke?: Stroke;
+      values: SeriesLinearValuesRoleWithPercent;
+      arrangement?: StackedArrangement;
+      spacing?: CategorySpacing;
+      labels?: StackedBarLabels;
+      type: "bar";
+    }
+  | {
+      version: "2026-09-26";
+      title?: string;
+      subtitle?: string;
+      accessibilityDescription?: string;
+      caption?: string;
+      headerAlign?: "start" | "center" | "end";
+      locale?: string;
+      theme?: ThemeName;
+      themeOverrides?: ThemeOverrides;
+      plotBorder?: boolean;
+      order?: CategoryOrder;
+      categoryAxis?: AxisOptions;
+      valueAxis?: AxisOptions;
+      color?: CategoricalColor;
+      annotations?: CartesianAnnotations;
+      references?: CategoricalReferences;
+      category: BarCategoryRole;
+      line?: PromotedLine;
+      cornerRadius?: number;
+      stroke?: Stroke;
+      values: SeriesLinearValuesRoleWithPercent;
+      arrangement?: StackedArrangement;
+      spacing?: CategorySpacing;
+      labels?: StackedBarLabels;
+      totals: boolean;
+      type: "bar";
+    }
+  | {
+      version: "2026-09-26";
+      title?: string;
+      subtitle?: string;
+      accessibilityDescription?: string;
+      caption?: string;
+      headerAlign?: "start" | "center" | "end";
+      locale?: string;
+      theme?: ThemeName;
+      themeOverrides?: ThemeOverrides;
+      plotBorder?: boolean;
+      order?: CategoryOrder;
+      categoryAxis?: AxisOptions;
+      valueAxis?: AxisOptions;
+      color?: CategoricalColorMapping;
+      annotations?: CartesianAnnotations;
+      references?: CategoricalReferences;
+      category: BarCategoryRole;
+      line?: PromotedLine;
+      cornerRadius?: number;
+      stroke?: Stroke;
+      values: SeriesLinearValuesRole;
+      arrangement: GroupedArrangement;
+      spacing?: BarSpacingPreference;
+      labels?: PositionableBarLabels;
+      type: "bar";
+    }
+  | {
+      version: "2026-09-26";
+      title?: string;
+      subtitle?: string;
+      accessibilityDescription?: string;
+      caption?: string;
+      headerAlign?: "start" | "center" | "end";
+      locale?: string;
+      theme?: ThemeName;
+      themeOverrides?: ThemeOverrides;
+      plotBorder?: boolean;
+      order?: CategoryOrder;
+      categoryAxis?: AxisOptions;
+      valueAxis?: AxisOptions;
+      color?: CategoricalColorMapping;
+      annotations?: CartesianAnnotations;
+      references?: CategoricalReferences;
+      category: BarCategoryRole;
+      line?: PromotedLine;
+      cornerRadius?: number;
+      stroke?: Stroke;
+      values: SeriesLinearValuesRoleWithPercent;
+      arrangement: NormalizedArrangement;
+      spacing?: CategorySpacing;
+      labels?: StackedBarLabels;
+      type: "bar";
+    }
+  | {
+      version: "2026-09-26";
+      title?: string;
+      subtitle?: string;
+      accessibilityDescription?: string;
+      caption?: string;
+      headerAlign?: "start" | "center" | "end";
+      locale?: string;
+      theme?: ThemeName;
+      themeOverrides?: ThemeOverrides;
+      plotBorder?: boolean;
+      order?: CategoryOrder;
+      categoryAxis?: AxisOptions;
+      valueAxis?: AxisOptions;
+      color?: CategoricalColor;
+      annotations?: CartesianAnnotations;
+      references?: CategoricalReferences;
+      type: "line";
+      category: CategoryRole;
+      values: LineValuesRole;
+      curve?: "linear" | "monotone" | "step";
+      stroke?: LineStroke;
+      points?:
+        | boolean
+        | {
+            /**
+             * @minItems 1
+             */
+            series?: [string | number, ...(string | number)[]];
+            radius?: number;
+            fill?: Color;
+            stroke?: Stroke;
+          };
+      labels?: LineLabels;
+    }
+  | {
+      version: "2026-09-26";
+      title?: string;
+      subtitle?: string;
+      accessibilityDescription?: string;
+      caption?: string;
+      headerAlign?: "start" | "center" | "end";
+      locale?: string;
+      theme?: ThemeName;
+      themeOverrides?: ThemeOverrides;
+      plotBorder?: boolean;
+      order?: CategoryOrder;
+      categoryAxis?: AxisOptions;
+      valueAxis?: AxisOptions;
+      color?: CategoricalColor;
+      annotations?: CartesianAnnotations;
+      references?: CategoricalReferences;
+      type: "area";
+      category: CategoryRole;
+      values: StackedLinearValuesRole;
+      curve?: "linear" | "monotone" | "step";
+      stroke?: Stroke;
+      labels?: AreaLabels;
+      line?: PromotedLine;
+      arrangement?: {
+        type: "stacked";
+      };
+    }
+  | {
+      version: "2026-09-26";
+      title?: string;
+      subtitle?: string;
+      accessibilityDescription?: string;
+      caption?: string;
+      headerAlign?: "start" | "center" | "end";
+      locale?: string;
+      theme?: ThemeName;
+      themeOverrides?: ThemeOverrides;
+      plotBorder?: boolean;
+      order?: CategoryOrder;
+      categoryAxis?: AxisOptions;
+      valueAxis?: AxisOptions;
+      color?: CategoricalColorMapping;
+      annotations?: CartesianAnnotations;
+      references?: CategoricalReferences;
+      type: "area";
+      category: CategoryRole;
+      values: SeriesLinearValuesRoleWithPercent;
+      curve?: "linear" | "monotone" | "step";
+      stroke?: Stroke;
+      labels?: AreaLabels;
+      line?: PromotedLine;
+      arrangement: NormalizedArrangement;
+    }
+  | {
+      version: "2026-09-26";
+      title?: string;
+      subtitle?: string;
+      accessibilityDescription?: string;
+      caption?: string;
+      headerAlign?: "start" | "center" | "end";
+      locale?: string;
+      theme?: ThemeName;
+      themeOverrides?: ThemeOverrides;
+      plotBorder?: boolean;
+      type: "scatter";
+      id?: FieldRole;
+      x: ScatterRole;
+      y: ScatterRole;
+      interval?: ScatterInterval;
+      color?: ScatterColor;
+      labels?: ScatterLabels;
+      xAxis?: AxisOptions;
+      yAxis?: AxisOptions;
+      annotations?: ScatterAnnotations;
+      references?: ScatterReferences;
+      size?: SizeEncoding;
+      radius?: number;
+    }
+  | {
+      version: "2026-09-26";
+      title?: string;
+      subtitle?: string;
+      accessibilityDescription?: string;
+      caption?: string;
+      headerAlign?: "start" | "center" | "end";
+      locale?: string;
+      theme?: ThemeName;
+      themeOverrides?: ThemeOverrides;
+      plotBorder?: boolean;
+      type: "scatter";
+      id?: FieldRole;
+      x: ScatterRole;
+      y: ScatterRole;
+      interval?: ScatterInterval;
+      color?: ScatterColor;
+      labels?: ScatterLabels;
+      xAxis?: AxisOptions;
+      yAxis?: AxisOptions;
+      annotations?: ScatterAnnotations;
+      references?: ScatterReferences;
+      size: RangedSizeEncoding;
+    }
+  | {
+      version: "2026-09-26";
+      title?: string;
+      subtitle?: string;
+      accessibilityDescription?: string;
+      caption?: string;
+      headerAlign?: "start" | "center" | "end";
+      locale?: string;
+      theme?: ThemeName;
+      themeOverrides?: ThemeOverrides;
+      type: "pie";
+      category: {
+        field: string;
+        format?: string;
+      };
+      values:
+        | {
+            type: "long";
+            field: string;
+            aggregation?: "sum" | "average" | "min" | "max" | "median";
+            format?: string;
+            percentFormat?: string;
+          }
+        | {
+            type: "count";
+            format?: string;
+            percentFormat?: string;
+          };
+      order?: CategoryOrder;
+      labels?: {
+        /**
+         * @minItems 1
+         */
+        content: ["category" | "value" | "percent", ...("category" | "value" | "percent")[]];
+        position?: "auto" | "inside" | "outside";
+      };
+      color?: CategoricalColorMapping;
+      innerRadius?: number;
+      cornerRadius?: number;
+      stroke?: Stroke;
+      annotations?: PieAnnotations;
+    };
+export type ThemeName = "editorial" | "clean" | "noir" | "loud" | "soft" | "technical";
+export type Color =
+  | string
+  | (
+      | {
+          light: string;
+          dark?: string;
+        }
+      | {
+          light?: string;
+          dark: string;
+        }
+    );
+export type ThemeCategoricalColors =
+  | ThemeCategoricalPalette
+  | (
+      | {
+          light: ThemeCategoricalPalette;
+          dark?: ThemeCategoricalPalette;
+        }
+      | {
+          light?: ThemeCategoricalPalette;
+          dark: ThemeCategoricalPalette;
+        }
+    );
+/**
+ * @minItems 1
+ */
+export type ThemeCategoricalPalette = [string, ...string[]];
+export type ThemeSequentialColors =
+  | ThemeSequentialRange
+  | (
+      | {
+          light: ThemeSequentialRange;
+          dark?: ThemeSequentialRange;
+        }
+      | {
+          light?: ThemeSequentialRange;
+          dark: ThemeSequentialRange;
+        }
+    );
+export type ThemeSequentialRange = [string, string] | [string, string, string];
+export type ThemeDivergingColors =
+  | ThemeDivergingRange
+  | (
+      | {
+          light: ThemeDivergingRange;
+          dark?: ThemeDivergingRange;
+        }
+      | {
+          light?: ThemeDivergingRange;
+          dark: ThemeDivergingRange;
+        }
+    );
+export type ThemeDivergingRange = [string, string, string] | [string, string, string, string, string];
 export type GoogleFontFamily =
   | "ABeeZee"
   | "ADLaM Display"
@@ -1950,476 +2500,694 @@ export type GoogleFontFamily =
   | "Zhi Mang Xing"
   | "Zilla Slab"
   | "Zilla Slab Highlight";
+export type CategoryOrder =
+  | {
+      type: "category" | "value";
+      direction: "ascending" | "descending";
+    }
+  | ExplicitCategoryOrder;
+export type AxisOptions =
+  | boolean
+  | {
+      line?: boolean;
+      title?: string;
+      format?: string;
+      grid?: boolean;
+    };
+export type CategoricalColor = Color | CategoricalColorMapping;
+/**
+ * @minItems 1
+ */
+export type ColorRange = [Color, ...Color[]];
+export type LegendOptions =
+  | boolean
+  | {
+      title?: string;
+    };
+/**
+ * @minItems 1
+ */
+export type CartesianAnnotations = [CartesianAnnotation, ...CartesianAnnotation[]];
+export type ReserveSpace =
+  | boolean
+  | {
+      x: boolean;
+      y: boolean;
+    };
+export type CartesianAnnotationAnchor =
+  | {
+      type: "category";
+      category: string | number;
+    }
+  | {
+      type: "datum";
+      category: string | number;
+      series?: string | number;
+    }
+  | {
+      type: "coordinate";
+      category: string | number;
+      value: number;
+    };
+/**
+ * @minItems 1
+ */
+export type CategoricalReferences = [CategoricalReference, ...CategoricalReference[]];
+export type CategoricalReference =
+  | {
+      /**
+       * Include this reference in automatic continuous-axis domains. Defaults to true. Explicit domains and normalized share bounds take precedence.
+       */
+      contributeToDomain?: boolean;
+      visible?: boolean;
+      reserveSpace?: ReserveSpace;
+      layer?: "back" | "front";
+      label?: ReferenceLabel;
+      stroke?: ReferenceStroke;
+      type: "value";
+      axis: "category";
+      value: string | number;
+    }
+  | {
+      /**
+       * Include this reference in automatic continuous-axis domains. Defaults to true. Explicit domains and normalized share bounds take precedence.
+       */
+      contributeToDomain?: boolean;
+      visible?: boolean;
+      reserveSpace?: ReserveSpace;
+      layer?: "back" | "front";
+      label?: ReferenceLabel;
+      stroke?: ReferenceStroke;
+      type: "value";
+      axis: "value";
+      value: number;
+    }
+  | {
+      /**
+       * Include this reference in automatic continuous-axis domains. Defaults to true. Explicit domains and normalized share bounds take precedence.
+       */
+      contributeToDomain?: boolean;
+      visible?: boolean;
+      reserveSpace?: ReserveSpace;
+      layer?: "back" | "front";
+      label?: ReferenceLabel;
+      stroke?: ReferenceStroke;
+      type: "statistic";
+      axis: "value";
+      statistic: CategoricalReferenceStatistic;
+    };
+export type BarCategoryScale = BandScale | UtcScale;
+export type ConnectedPointLabels =
+  | {
+      at: "extrema" | "all" | "ends";
+      /**
+       * @minItems 1
+       */
+      content: ["category" | "value", ...("category" | "value")[]];
+      position?: "above" | "side";
+    }
+  | {
+      at: "extrema" | "all" | "ends";
+      field: string;
+      format?: string;
+      position?: "above" | "side";
+    };
+export type SimpleBarValuesRole =
+  | {
+      type: "long";
+      field: string;
+      aggregation?: "sum" | "average" | "min" | "max" | "median";
+      scale?: LinearScale;
+      format?: string;
+    }
+  | {
+      type: "wide";
+      /**
+       * @minItems 1
+       * @maxItems 1
+       */
+      fields: [string];
+      aggregation?: "sum" | "average" | "min" | "max" | "median";
+      scale?: LinearScale;
+      format?: string;
+    }
+  | {
+      type: "count";
+      scale?: LinearScale;
+      format?: string;
+    };
+export type ContinuousScale = LinearScale | LogScale | UtcScale;
+export type RangeCategoryOrder =
+  | {
+      type: "category";
+      direction: "ascending" | "descending";
+    }
+  | ExplicitCategoryOrder;
+export type SeriesLinearValuesRoleWithPercent =
+  | {
+      type: "long";
+      field: string;
+      series: SeriesRole;
+      aggregation?: "sum" | "average" | "min" | "max" | "median";
+      scale?: LinearScale;
+      format?: string;
+      percentFormat?: string;
+    }
+  | {
+      type: "wide";
+      /**
+       * @minItems 2
+       */
+      fields: [string, string, ...string[]];
+      aggregation?: "sum" | "average" | "min" | "max" | "median";
+      scale?: LinearScale;
+      format?: string;
+      percentFormat?: string;
+    }
+  | {
+      type: "count";
+      series: SeriesRole;
+      scale?: LinearScale;
+      format?: string;
+      percentFormat?: string;
+    };
+export type SeriesLinearValuesRole =
+  | {
+      type: "long";
+      field: string;
+      series: SeriesRole;
+      aggregation?: "sum" | "average" | "min" | "max" | "median";
+      scale?: LinearScale;
+      format?: string;
+    }
+  | {
+      type: "wide";
+      /**
+       * @minItems 2
+       */
+      fields: [string, string, ...string[]];
+      aggregation?: "sum" | "average" | "min" | "max" | "median";
+      scale?: LinearScale;
+      format?: string;
+    }
+  | {
+      type: "count";
+      series: SeriesRole;
+      scale?: LinearScale;
+      format?: string;
+    };
+export type CategoryScale = BandScale | LinearScale | LogScale | UtcScale;
+export type LineValuesRole = LineLongValuesRole | LineWideValuesRole | CountValuesRole;
+export type QuantitativeScale = LinearScale | LogScale;
+export type StackedLinearValuesRole = LinearValuesRole | SeriesLinearValuesRoleWithPercent;
+export type LinearValuesRole = LinearLongValuesRole | LinearWideValuesRole | LinearCountValuesRole;
+export type ScatterColor =
+  | Color
+  | (
+      | {
+          type: "categorical";
+          field: string;
+          /**
+           * @minItems 1
+           */
+          domain?: [string | number, ...(string | number)[]];
+          range?: ColorRange;
+          legend?: LegendOptions;
+        }
+      | {
+          type: "sequential";
+          field: string;
+          /**
+           * @minItems 2
+           * @maxItems 2
+           */
+          domain?: [number, number];
+          range?: SequentialColorRange;
+          format?: string;
+          legend?: LegendOptions;
+        }
+      | {
+          type: "diverging";
+          field: string;
+          /**
+           * @minItems 2
+           * @maxItems 2
+           */
+          domain: [number, number];
+          midpoint: number;
+          range?: DivergingColorRange;
+          format?: string;
+          legend?: LegendOptions;
+        }
+    );
+export type SequentialColorRange = [Color, Color] | ThreeColorRange;
+/**
+ * @minItems 3
+ * @maxItems 3
+ */
+export type ThreeColorRange = [Color, Color, Color];
+export type DivergingColorRange = ThreeColorRange | [Color, Color, Color, Color, Color];
+/**
+ * @minItems 1
+ */
+export type ScatterAnnotations = [ScatterAnnotation, ...ScatterAnnotation[]];
+export type ScatterAnnotationAnchor =
+  | {
+      type: "datum";
+      id: string | number;
+    }
+  | {
+      type: "coordinate";
+      x: string | number;
+      y: string | number;
+    };
+/**
+ * @minItems 1
+ */
+export type ScatterReferences = [ScatterReference, ...ScatterReference[]];
+export type ScatterReference =
+  | {
+      /**
+       * Include this reference in automatic continuous-axis domains. Defaults to true. Explicit domains and normalized share bounds take precedence.
+       */
+      contributeToDomain?: boolean;
+      visible?: boolean;
+      reserveSpace?: ReserveSpace;
+      layer?: "back" | "front";
+      label?: ReferenceLabel;
+      stroke?: ReferenceStroke;
+      type: "value";
+      axis: "x" | "y";
+      value: string | number;
+    }
+  | {
+      /**
+       * Include this reference in automatic continuous-axis domains. Defaults to true. Explicit domains and normalized share bounds take precedence.
+       */
+      contributeToDomain?: boolean;
+      visible?: boolean;
+      reserveSpace?: ReserveSpace;
+      layer?: "back" | "front";
+      label?: ReferenceLabel;
+      stroke?: ReferenceStroke;
+      type: "statistic";
+      axis: "x" | "y";
+      statistic: ReferenceStatistic;
+    };
+/**
+ * @minItems 1
+ */
+export type PieAnnotations = [PieAnnotation, ...PieAnnotation[]];
 
-export interface ChartConfigInput {
-  version: "2026-03-20";
-  format: "svg" | "png";
-  scale?: number;
-  width?: number;
-  height?: number;
-  plotWidth?: number;
-  plotHeight?: number;
-  margin?: {
-    top?: number;
-    right?: number;
-    bottom?: number;
-    left?: number;
+export interface ThemeOverrides {
+  colors?: ThemeColorOverrides;
+  fonts?: ThemeFontOverrides;
+  typography?: ThemeTypographyOverrides;
+  axes?: ThemeAxisOverrides;
+}
+export interface ThemeColorOverrides {
+  background?: Color;
+  categorical?: ThemeCategoricalColors;
+  sequential?: ThemeSequentialColors;
+  diverging?: ThemeDivergingColors;
+  title?: Color;
+  subtitle?: Color;
+  caption?: {
+    color?: Color;
+    linkColor?: Color;
   };
-  /**
-   * Locale identifier accepted by JavaScript Intl and associated with the chart content, such as en, pl, or zh-Hant.
-   */
-  locale?: string;
-  title?: string;
-  subtitle?: string;
-  /**
-   * Caption below the chart (a source line, methodology note, date). URLs, bare domains, and [label](url) links in it are auto-detected and rendered as inline links on every surface.
-   */
-  footer?: string;
-  headerAlign?: "left" | "center" | "right";
-  /**
-   * Show a small "Made with Szum" credit in the bottom-right. Always on for free and keyless renders; Creator and Pro omit it by default and set true to opt in.
-   */
-  attribution?: boolean;
-  theme?: "editorial" | "clean" | "noir" | "loud" | "soft" | "technical";
-  themeOverrides?: {
-    backgroundColor?: string;
-    colors?: string[];
-    /**
-     * @minItems 2
-     * @maxItems 2
-     */
-    sequentialRange?: [string, string];
-    fontFamily?: GoogleFontFamily;
-    titleFontFamily?: GoogleFontFamily;
-    numericFontFamily?: GoogleFontFamily;
-    fontSize?: number;
-    titleFontWeight?: string;
-    titleFontSize?: number;
-    subtitleFontSize?: number;
-    titleColor?: string;
-    subtitleColor?: string;
+  axes?: {
+    line?: Color;
+    title?: Color;
+    grid?: Color;
+    tickLabel?: Color;
+  };
+  label?: Color;
+}
+export interface ThemeFontOverrides {
+  body?: GoogleFontFamily;
+  title?: GoogleFontFamily;
+  numeric?: GoogleFontFamily;
+}
+export interface ThemeTypographyOverrides {
+  baseSize?: number;
+  header?: {
     titleSubtitleGap?: number;
-    headerGap?: number;
-    footerFontSize?: number;
-    footerColor?: string;
-    footerLinkColor?: string;
-    footerGap?: number;
-    axisLineWidth?: number;
-    axisColor?: string;
-    axisLabelColor?: string;
-    axisLabelFontWeight?: string;
-    gridLineWidth?: number;
-    gridColor?: string;
-    tickSize?: number;
-    tickPadding?: number;
-    tickLabelColor?: string;
-    tickLabelFontWeight?: string;
-    tickDensity?: number;
-    gridLines?: "none" | "value" | "both";
-    axisFrame?: "none" | "baseline" | "lShape" | "full";
-    curve?: "linear" | "monotone" | "step";
-    barPadding?: number;
-    barCornerRadius?: number;
-    pieCornerRadius?: number;
-    lineStrokeWidth?: number;
-    dotRadius?: number;
-    labelColor?: string;
-    labelFontSize?: number;
-    labelFontWeight?: string;
-    labelMutedFontWeight?: string;
-    labelMutedOpacity?: number;
-    labelHaloWidth?: number;
+    gap?: number;
   };
-  data?: {
-    [k: string]: string | number;
-  }[];
+  title?: {
+    size?: number;
+    weight?: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
+  };
+  subtitle?: {
+    size?: number;
+  };
+  caption?: {
+    size?: number;
+    gap?: number;
+  };
+  axisTitle?: WeightTypography;
+  tickLabel?: WeightTypography;
+  label?: {
+    size?: number;
+    weight?: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
+    mutedWeight?: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
+    mutedOpacity?: number;
+    haloWidth?: number;
+  };
+}
+export interface WeightTypography {
+  weight?: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
+}
+export interface ThemeAxisOverrides {
+  lineWidth?: number;
+  gridLineWidth?: number;
+  tickSize?: number;
+  tickPadding?: number;
+}
+export interface ExplicitCategoryOrder {
+  type: "explicit";
   /**
    * @minItems 1
    */
-  marks: [
-    (
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "dot";
-          r?: number;
-          label?: {
-            field: string;
-            format?: string;
-          };
-        }
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "line";
-          curve?: "linear" | "monotone" | "step";
-          label?:
-            | boolean
-            | {
-                end?: boolean | ("category" | "value")[];
-                points?:
-                  | ("extrema" | "all" | "ends")
-                  | false
-                  | {
-                      at: "extrema" | "all" | "ends";
-                      show?: ("value" | "category")[];
-                    };
-                format?: string;
-              };
-        }
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "barY";
-          group?: "stack" | "dodge";
-          cornerRadius?: number;
-          label?:
-            | boolean
-            | {
-                show?: ("value" | "percent" | "category" | "total")[];
-                position?: "auto" | "outside" | "inside";
-                format?: string;
-              };
-        }
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "barX";
-          group?: "stack" | "dodge";
-          cornerRadius?: number;
-          label?:
-            | boolean
-            | {
-                show?: ("value" | "percent" | "category" | "total")[];
-                position?: "auto" | "outside" | "inside";
-                format?: string;
-              };
-        }
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "areaY";
-          curve?: "linear" | "monotone" | "step";
-          label?:
-            | boolean
-            | {
-                end?: boolean | ("category" | "value" | "percent")[];
-                format?: string;
-              };
-        }
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "areaX";
-          curve?: "linear" | "monotone" | "step";
-        }
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "pie";
-          innerRadius?: number;
-          cornerRadius?: number;
-          label?:
-            | boolean
-            | {
-                show?: ("value" | "percent" | "category")[];
-                position?: "auto" | "inside" | "outside";
-                format?: string;
-              };
-        }
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "text";
-          text?: string;
-          dx?: number;
-          dy?: number;
-          fontSize?: number;
-          fontWeight?: string;
-          textAnchor?: "start" | "center" | "end";
-        }
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "ruleX";
-        }
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "ruleY";
-        }
-    ),
-    ...(
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "dot";
-          r?: number;
-          label?: {
-            field: string;
-            format?: string;
-          };
-        }
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "line";
-          curve?: "linear" | "monotone" | "step";
-          label?:
-            | boolean
-            | {
-                end?: boolean | ("category" | "value")[];
-                points?:
-                  | ("extrema" | "all" | "ends")
-                  | false
-                  | {
-                      at: "extrema" | "all" | "ends";
-                      show?: ("value" | "category")[];
-                    };
-                format?: string;
-              };
-        }
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "barY";
-          group?: "stack" | "dodge";
-          cornerRadius?: number;
-          label?:
-            | boolean
-            | {
-                show?: ("value" | "percent" | "category" | "total")[];
-                position?: "auto" | "outside" | "inside";
-                format?: string;
-              };
-        }
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "barX";
-          group?: "stack" | "dodge";
-          cornerRadius?: number;
-          label?:
-            | boolean
-            | {
-                show?: ("value" | "percent" | "category" | "total")[];
-                position?: "auto" | "outside" | "inside";
-                format?: string;
-              };
-        }
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "areaY";
-          curve?: "linear" | "monotone" | "step";
-          label?:
-            | boolean
-            | {
-                end?: boolean | ("category" | "value" | "percent")[];
-                format?: string;
-              };
-        }
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "areaX";
-          curve?: "linear" | "monotone" | "step";
-        }
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "pie";
-          innerRadius?: number;
-          cornerRadius?: number;
-          label?:
-            | boolean
-            | {
-                show?: ("value" | "percent" | "category")[];
-                position?: "auto" | "inside" | "outside";
-                format?: string;
-              };
-        }
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "text";
-          text?: string;
-          dx?: number;
-          dy?: number;
-          fontSize?: number;
-          fontWeight?: string;
-          textAnchor?: "start" | "center" | "end";
-        }
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "ruleX";
-        }
-      | {
-          data?: {
-            [k: string]: string | number;
-          }[];
-          x?: string;
-          y?: string;
-          fill?: string;
-          stroke?: string;
-          strokeWidth?: number;
-          type: "ruleY";
-        }
-    )[]
-  ];
-  x?: {
-    type?: "linear" | "log" | "utc" | "band";
-    domain?: [number, number] | string[];
-    nice?: boolean;
-    label?: string;
-    tickFormat?: string;
-    display?: boolean;
-  };
-  y?: {
-    type?: "linear" | "log" | "utc" | "band";
-    domain?: [number, number] | string[];
-    nice?: boolean;
-    label?: string;
-    tickFormat?: string;
-    display?: boolean;
-  };
-  color?:
+  categories: [string | number, ...(string | number)[]];
+}
+export interface CategoricalColorMapping {
+  /**
+   * @minItems 1
+   */
+  domain?: [string | number, ...(string | number)[]];
+  range?: ColorRange;
+  legend?: LegendOptions;
+}
+export interface CartesianAnnotation {
+  placement?: AnnotationPlacement;
+  style?: AnnotationTextStyle;
+  visible?: boolean;
+  boxAnchor?: AnnotationBoxAnchor;
+  reserveSpace?: ReserveSpace;
+  width?: number | "shape";
+  connector?: "none" | "line" | "arrow";
+  offset?: AnnotationOffset;
+  align?: "start" | "center" | "end";
+  text: string;
+  anchor: CartesianAnnotationAnchor;
+}
+export interface AnnotationPlacement {
+  side: "above" | "right" | "below" | "left";
+  align?: "start" | "center" | "end";
+  gap?: number;
+}
+export interface AnnotationTextStyle {
+  color?: Color;
+  fontSize?: number;
+  fontWeight?: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
+  background?: boolean;
+}
+export interface AnnotationBoxAnchor {
+  x: "start" | "center" | "end";
+  y: "top" | "middle" | "bottom";
+}
+export interface AnnotationOffset {
+  x?: number;
+  y?: number;
+}
+/**
+ * Omit for no label. content is an ordered array of text and/or value, without duplicates. text is required when text is included. Values follow the reference's statistic scope and formatting.
+ */
+export interface ReferenceLabel {
+  /**
+   * @minItems 1
+   * @maxItems 2
+   */
+  content: ["text" | "value"] | ["text" | "value", "text" | "value"];
+  text?: string;
+  width?: number;
+  position?: "before" | "after" | "outside-start" | "outside-end";
+  align?: "start" | "center" | "end";
+}
+export interface ReferenceStroke {
+  color?: Color;
+  width?: number;
+  style?: "solid" | "dashed" | "dotted";
+}
+export interface CategoricalReferenceStatistic {
+  operation: "average" | "median" | "min" | "max";
+  scope: "visible" | "all";
+  basis?: "values" | "categoryTotals";
+  series?: string | number;
+}
+export interface BarCategoryRole {
+  field: string;
+  scale?: BarCategoryScale;
+  format?: string;
+}
+export interface BandScale {
+  type: "band";
+  /**
+   * @minItems 1
+   */
+  domain?: [string | number, ...(string | number)[]];
+  reverse?: boolean;
+}
+export interface UtcScale {
+  type: "utc";
+  /**
+   * @minItems 2
+   * @maxItems 2
+   */
+  domain?: [string | number, string | number];
+  nice?: boolean;
+  reverse?: boolean;
+}
+export interface PromotedLine {
+  /**
+   * @minItems 1
+   */
+  series: [string | number, ...(string | number)[]];
+  curve?: "linear" | "monotone" | "step";
+  stroke?: LineStroke;
+  points?:
+    | boolean
     | {
-        label?: string;
-        type: "categorical";
-        domain?: string[];
-        range?: string[];
-      }
-    | {
-        label?: string;
-        type: "sequential";
-        /**
-         * @minItems 2
-         * @maxItems 2
-         */
-        domain?: [number, number];
-        /**
-         * @minItems 2
-         * @maxItems 2
-         */
-        range?: [string, string];
-      }
-    | {
-        label?: string;
+        radius?: number;
+        fill?: Color;
+        stroke?: Stroke;
       };
+  labels?: LineLabels;
+}
+export interface LineStroke {
+  width?: number;
+}
+export interface Stroke {
+  color?: Color;
+  width?: number;
+}
+export interface LineLabels {
+  series?: {
+    /**
+     * @minItems 1
+     */
+    content: ["series" | "value", ...("series" | "value")[]];
+  };
+  points?: ConnectedPointLabels;
+}
+export interface LinearScale {
+  type: "linear";
+  /**
+   * @minItems 2
+   * @maxItems 2
+   */
+  domain?: [number, number];
+  nice?: boolean;
+  reverse?: boolean;
+}
+export interface CategorySpacing {
+  category: number;
+}
+export interface PositionableBarLabels {
+  /**
+   * @minItems 1
+   */
+  content: ["value" | "percent" | "category" | "series", ...("value" | "percent" | "category" | "series")[]];
+  position?: "auto" | "outside" | "inside";
+}
+export interface RangeCategoryRole {
+  field: string;
+  scale?: BandScale;
+  format?: string;
+}
+export interface RangeValuesRole {
+  type: "range";
+  start: FieldRole;
+  end: FieldRole;
+  scale?: ContinuousScale;
+  format?: string;
+}
+export interface FieldRole {
+  field: string;
+}
+export interface LogScale {
+  type: "log";
+  /**
+   * @minItems 2
+   * @maxItems 2
+   */
+  domain?: [number, number];
+  nice?: boolean;
+  reverse?: boolean;
+}
+export interface SeriesRole {
+  field: string;
+  /**
+   * @minItems 1
+   */
+  domain?: [string | number, ...(string | number)[]];
+  format?: string;
+}
+export interface StackedArrangement {
+  type: "stacked";
+}
+export interface StackedBarLabels {
+  /**
+   * @minItems 1
+   */
+  content: ["value" | "percent" | "category" | "series", ...("value" | "percent" | "category" | "series")[]];
+}
+export interface GroupedArrangement {
+  type: "grouped";
+}
+export interface BarSpacingPreference {
+  category?: number;
+  series?: number;
+}
+export interface NormalizedArrangement {
+  type: "stacked";
+  normalization: "percent";
+}
+export interface CategoryRole {
+  field: string;
+  scale?: CategoryScale;
+  format?: string;
+}
+export interface LineLongValuesRole {
+  type: "long";
+  field: string;
+  series?: SeriesRole;
+  aggregation?: "sum" | "average" | "min" | "max" | "median";
+  scale?: ContinuousScale;
+  format?: string;
+}
+export interface LineWideValuesRole {
+  type: "wide";
+  /**
+   * @minItems 1
+   */
+  fields: [string, ...string[]];
+  aggregation?: "sum" | "average" | "min" | "max" | "median";
+  scale?: ContinuousScale;
+  format?: string;
+}
+export interface CountValuesRole {
+  type: "count";
+  series?: SeriesRole;
+  scale?: QuantitativeScale;
+  format?: string;
+}
+export interface LinearLongValuesRole {
+  type: "long";
+  field: string;
+  series?: SeriesRole;
+  aggregation?: "sum" | "average" | "min" | "max" | "median";
+  scale?: LinearScale;
+  format?: string;
+}
+export interface LinearWideValuesRole {
+  type: "wide";
+  /**
+   * @minItems 1
+   */
+  fields: [string, ...string[]];
+  aggregation?: "sum" | "average" | "min" | "max" | "median";
+  scale?: LinearScale;
+  format?: string;
+}
+export interface LinearCountValuesRole {
+  type: "count";
+  series?: SeriesRole;
+  scale?: LinearScale;
+  format?: string;
+}
+export interface AreaLabels {
+  series?: {
+    /**
+     * @minItems 1
+     */
+    content: ["series" | "value" | "percent", ...("series" | "value" | "percent")[]];
+  };
+  points?: ConnectedPointLabels;
+}
+export interface ScatterRole {
+  field: string;
+  scale?: CategoryScale;
+  format?: string;
+}
+export interface ScatterInterval {
+  axis: "x" | "y";
+  lower: FieldRole;
+  upper: FieldRole;
+  stroke?: Stroke;
+}
+export interface ScatterLabels {
+  field: string;
+  format?: string;
+  position?: "above" | "side";
+}
+export interface ScatterAnnotation {
+  placement?: AnnotationPlacement;
+  style?: AnnotationTextStyle;
+  visible?: boolean;
+  boxAnchor?: AnnotationBoxAnchor;
+  reserveSpace?: ReserveSpace;
+  width?: number | "shape";
+  connector?: "none" | "line" | "arrow";
+  offset?: AnnotationOffset;
+  align?: "start" | "center" | "end";
+  text: string;
+  anchor: ScatterAnnotationAnchor;
+}
+export interface ReferenceStatistic {
+  operation: "average" | "median" | "min" | "max";
+  scope: "visible" | "all";
+}
+export interface SizeEncoding {
+  field: string;
+  format?: string;
+  legend?: LegendOptions;
+}
+export interface RangedSizeEncoding {
+  field: string;
+  format?: string;
+  legend?: LegendOptions;
+  /**
+   * @minItems 2
+   * @maxItems 2
+   */
+  range: [number, number];
+}
+export interface PieAnnotation {
+  placement?: AnnotationPlacement;
+  style?: AnnotationTextStyle;
+  visible?: boolean;
+  boxAnchor?: AnnotationBoxAnchor;
+  reserveSpace?: ReserveSpace;
+  width?: number | "shape";
+  connector?: "none" | "line" | "arrow";
+  offset?: AnnotationOffset;
+  align?: "start" | "center" | "end";
+  text: string;
+  anchor: {
+    type: "datum";
+    category: string | number;
+  };
 }

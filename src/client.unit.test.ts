@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { type ChartConfig, Szum } from "./client";
+import { Szum } from "./client";
+import type { ChartConfig, ChartDocument } from "./index";
 import {
   SzumAPIError,
   SzumAuthenticationError,
@@ -13,16 +14,26 @@ import { SCHEMA_VERSION } from "./generated/version";
 import { validateChart } from "./validation";
 
 const VALID_CONFIG: ChartConfig = {
-  format: "svg",
-  marks: [
-    {
-      type: "barY",
-      data: [
-        { x: "A", y: 1 },
-        { x: "B", y: 2 },
-      ],
-    },
-  ],
+  type: "column",
+  category: { field: "category" },
+  values: { type: "long", field: "value" },
+};
+
+const VALID_DATA = [
+  { category: "A", value: 1 },
+  { category: "B", value: 2 },
+];
+
+const VALID_DOCUMENT: ChartDocument = {
+  config: VALID_CONFIG,
+  data: VALID_DATA,
+  output: { format: "svg" },
+};
+
+const RESOLVED_DOCUMENT = {
+  ...VALID_DOCUMENT,
+  version: SCHEMA_VERSION,
+  config: { ...VALID_CONFIG, version: SCHEMA_VERSION },
 };
 
 const CHART_OBJECT = {
@@ -35,7 +46,7 @@ const CHART_OBJECT = {
   publishedAt: "2024-06-01T00:00:00.000Z",
   imageUrl: "https://szum.io/c/abc123",
   embedUrl: "https://szum.io/e/abc123",
-  configUrl: "https://szum.io/api/charts/abc123/config",
+  documentUrl: "https://szum.io/api/charts/abc123/document",
 };
 
 const createMockResponse = ({
@@ -84,6 +95,45 @@ describe("Szum (unit)", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("uses the same immutable document for validation, rendering, and saving", async () => {
+    const document = structuredClone(VALID_DOCUMENT);
+    const before = structuredClone(document);
+    const baseUrl = "https://test.szum.io";
+    const szum = new Szum({ apiKey: "sk_test", baseUrl });
+    fetchMock
+      .mockResolvedValueOnce(
+        createMockResponse({
+          body: JSON.stringify({ valid: true, diagnostics: [] }),
+        }),
+      )
+      .mockResolvedValueOnce(createMockResponse({ body: new ArrayBuffer(0) }))
+      .mockResolvedValueOnce(
+        createMockResponse({ body: JSON.stringify(CHART_OBJECT) }),
+      );
+
+    await validateChart(document, { baseUrl });
+    await szum.render(document);
+    await szum.charts.create(document);
+
+    const bodies = fetchMock.mock.calls.map(([, init]) => {
+      if (typeof init?.body !== "string") {
+        throw new Error("Expected a serialized chart document");
+      }
+
+      return JSON.parse(init.body);
+    });
+    expect(bodies).toHaveLength(3);
+    expect(bodies[0]).toEqual({
+      ...before,
+      version: SCHEMA_VERSION,
+      config: { ...before.config, version: SCHEMA_VERSION },
+    });
+    expect(bodies[1]).toEqual(bodies[0]);
+    expect(bodies[2].document).toEqual(bodies[0]);
+    expect(document).toEqual(before);
   });
 
   describe("render", () => {
@@ -97,7 +147,7 @@ describe("Szum (unit)", () => {
         createMockResponse({ body: svgBytes.buffer as ArrayBuffer }),
       );
 
-      await szum.render(VALID_CONFIG);
+      await szum.render(VALID_DOCUMENT);
 
       expect(fetchMock).toHaveBeenCalledOnce();
       const [url, init] = fetchMock.mock.calls[0];
@@ -119,13 +169,14 @@ describe("Szum (unit)", () => {
         createMockResponse({ body: new ArrayBuffer(0) }),
       );
 
-      await szum.render(VALID_CONFIG);
+      await szum.render(VALID_DOCUMENT);
 
       const [, init] = fetchMock.mock.calls[0];
       const body = JSON.parse(init?.body as string);
       expect(body.version).toBe(SCHEMA_VERSION);
-      expect(body.format).toBe("svg");
-      expect(body.marks).toHaveLength(1);
+      expect(body.config.version).toBe(SCHEMA_VERSION);
+      expect(body.output.format).toBe("svg");
+      expect(body.data).toHaveLength(2);
     });
 
     it("preserves explicit version when provided", async () => {
@@ -137,11 +188,14 @@ describe("Szum (unit)", () => {
         createMockResponse({ body: new ArrayBuffer(0) }),
       );
 
-      await szum.render({ ...VALID_CONFIG, version: "2026-03-20" });
+      await szum.render({
+        ...VALID_DOCUMENT,
+        config: { ...VALID_CONFIG, version: SCHEMA_VERSION },
+      });
 
       const [, init] = fetchMock.mock.calls[0];
       const body = JSON.parse(init?.body as string);
-      expect(body.version).toBe("2026-03-20");
+      expect(body.config.version).toBe(SCHEMA_VERSION);
     });
 
     it("returns Uint8Array on success", async () => {
@@ -154,7 +208,7 @@ describe("Szum (unit)", () => {
         createMockResponse({ body: svgBytes.buffer as ArrayBuffer }),
       );
 
-      const result = await szum.render(VALID_CONFIG);
+      const result = await szum.render(VALID_DOCUMENT);
 
       expect(result).toBeInstanceOf(Uint8Array);
       expect(new TextDecoder().decode(result)).toBe("<svg>chart</svg>");
@@ -172,6 +226,7 @@ describe("Szum (unit)", () => {
           headers: {
             "Content-Type": "image/svg+xml",
             "X-Font-Fallback": "true",
+            "X-Chart-Diagnostics": "%5B%5D",
             "X-Usage-Used": "12",
             "X-Usage-Limit": "500",
             "X-Usage-Remaining": "488",
@@ -179,12 +234,13 @@ describe("Szum (unit)", () => {
         }),
       );
 
-      const result = await szum.renderWithMetadata(VALID_CONFIG);
+      const result = await szum.renderWithMetadata(VALID_DOCUMENT);
 
       expect(new TextDecoder().decode(result.data)).toBe("<svg>chart</svg>");
       expect(result).toMatchObject({
         contentType: "image/svg+xml",
         fontFallback: true,
+        diagnostics: [],
         usage: { used: 12, limit: 500, remaining: 488, overage: false },
       });
     });
@@ -202,7 +258,7 @@ describe("Szum (unit)", () => {
       );
 
       await expect(
-        szum.renderWithMetadata(VALID_CONFIG),
+        szum.renderWithMetadata(VALID_DOCUMENT),
       ).rejects.toBeInstanceOf(SzumAPIError);
     });
 
@@ -217,50 +273,63 @@ describe("Szum (unit)", () => {
           status: 400,
           statusText: "Bad Request",
           body: JSON.stringify({
-            error: "marks.0.type: Invalid discriminator value",
+            error: {
+              code: "validation_failed",
+              message: "config.type: Invalid discriminator value",
+              retryable: false,
+            },
           }),
         }),
       );
 
       try {
-        await szum.render(VALID_CONFIG);
+        await szum.render(VALID_DOCUMENT);
         expect.unreachable("should have thrown");
       } catch (err) {
         expect(err).toBeInstanceOf(SzumError);
         const szumErr = err as SzumError;
         expect(szumErr.status).toBe(400);
         expect(szumErr.message).toBe(
-          "marks.0.type: Invalid discriminator value",
+          "config.type: Invalid discriminator value",
         );
       }
     });
 
-    it("preserves structured chart issues on errors", async () => {
+    it("preserves structured chart diagnostics on errors", async () => {
       const szum = new Szum({
         apiKey: "sk_test",
         baseUrl: "https://test.szum.io",
       });
       const issue = {
-        code: "schema_invalid",
+        code: "invalid_structure",
         severity: "error",
-        path: ["marks", 0],
-        message: "Invalid mark",
-        details: {},
+        path: "/config/type",
+        message: "Invalid chart type",
+        details: { reason: "schema_invalid" },
       };
       fetchMock.mockResolvedValue(
         createMockResponse({
           ok: false,
           status: 400,
-          body: JSON.stringify({ error: "Invalid config", issues: [issue] }),
+          body: JSON.stringify({
+            error: {
+              code: "validation_failed",
+              message: "Invalid config",
+              retryable: false,
+            },
+            diagnostics: [issue],
+          }),
         }),
       );
 
       try {
-        await szum.render(VALID_CONFIG);
+        await szum.render(VALID_DOCUMENT);
         expect.unreachable("should have thrown");
       } catch (error) {
         expect(error).toBeInstanceOf(SzumError);
-        expect((error as SzumError).issues).toEqual([issue]);
+        expect((error as SzumError).diagnostics).toEqual([issue]);
+        expect((error as SzumError).code).toBe("validation_failed");
+        expect((error as SzumError).failure?.diagnostics).toEqual([issue]);
       }
     });
 
@@ -280,7 +349,7 @@ describe("Szum (unit)", () => {
       );
 
       try {
-        await szum.render(VALID_CONFIG);
+        await szum.render(VALID_DOCUMENT);
         expect.unreachable("should have thrown");
       } catch (err) {
         expect(err).toBeInstanceOf(SzumError);
@@ -300,11 +369,17 @@ describe("Szum (unit)", () => {
           ok: false,
           status: 400,
           statusText: "Bad Request",
-          body: JSON.stringify({ error: "invalid" }),
+          body: JSON.stringify({
+            error: {
+              code: "invalid_request",
+              message: "invalid",
+              retryable: false,
+            },
+          }),
         }),
       );
 
-      await expect(szum.render(VALID_CONFIG)).rejects.toBeInstanceOf(
+      await expect(szum.render(VALID_DOCUMENT)).rejects.toBeInstanceOf(
         SzumInvalidRequestError,
       );
     });
@@ -319,11 +394,17 @@ describe("Szum (unit)", () => {
           ok: false,
           status: 401,
           statusText: "Unauthorized",
-          body: JSON.stringify({ error: "bad key" }),
+          body: JSON.stringify({
+            error: {
+              code: "authentication_required",
+              message: "bad key",
+              retryable: false,
+            },
+          }),
         }),
       );
 
-      await expect(szum.render(VALID_CONFIG)).rejects.toBeInstanceOf(
+      await expect(szum.render(VALID_DOCUMENT)).rejects.toBeInstanceOf(
         SzumAuthenticationError,
       );
     });
@@ -339,11 +420,17 @@ describe("Szum (unit)", () => {
           ok: false,
           status: 429,
           statusText: "Too Many Requests",
-          body: JSON.stringify({ error: "slow down" }),
+          body: JSON.stringify({
+            error: {
+              code: "rate_limited",
+              message: "slow down",
+              retryable: true,
+            },
+          }),
         }),
       );
 
-      await expect(szum.render(VALID_CONFIG)).rejects.toBeInstanceOf(
+      await expect(szum.render(VALID_DOCUMENT)).rejects.toBeInstanceOf(
         SzumRateLimitError,
       );
     });
@@ -358,13 +445,19 @@ describe("Szum (unit)", () => {
           ok: false,
           status: 400,
           statusText: "Bad Request",
-          body: JSON.stringify({ error: "x" }),
+          body: JSON.stringify({
+            error: {
+              code: "temporarily_unavailable",
+              message: "x",
+              retryable: true,
+            },
+          }),
           headers: { "X-Vercel-Id": "fra1::abc123" },
         }),
       );
 
       try {
-        await szum.render(VALID_CONFIG);
+        await szum.render(VALID_DOCUMENT);
         expect.unreachable("should have thrown");
       } catch (err) {
         expect(err).toBeInstanceOf(SzumError);
@@ -383,13 +476,19 @@ describe("Szum (unit)", () => {
           ok: false,
           status: 429,
           statusText: "Too Many Requests",
-          body: JSON.stringify({ error: "Rate limit exceeded" }),
+          body: JSON.stringify({
+            error: {
+              code: "rate_limited",
+              message: "Rate limit exceeded",
+              retryable: true,
+            },
+          }),
           headers: { "Retry-After": "30" },
         }),
       );
 
       try {
-        await szum.render(VALID_CONFIG);
+        await szum.render(VALID_DOCUMENT);
         expect.unreachable("should have thrown");
       } catch (err) {
         expect(err).toBeInstanceOf(SzumError);
@@ -409,12 +508,18 @@ describe("Szum (unit)", () => {
           ok: false,
           status: 401,
           statusText: "Unauthorized",
-          body: JSON.stringify({ error: "Invalid API key" }),
+          body: JSON.stringify({
+            error: {
+              code: "authentication_required",
+              message: "Invalid API key",
+              retryable: false,
+            },
+          }),
         }),
       );
 
       try {
-        await szum.render(VALID_CONFIG);
+        await szum.render(VALID_DOCUMENT);
         expect.unreachable("should have thrown");
       } catch (err) {
         expect(err).toBeInstanceOf(SzumError);
@@ -431,7 +536,7 @@ describe("Szum (unit)", () => {
         createMockResponse({ body: new ArrayBuffer(0) }),
       );
 
-      await szum.render(VALID_CONFIG);
+      await szum.render(VALID_DOCUMENT);
 
       const [, init] = fetchMock.mock.calls[0];
       expect(init?.signal).toBeInstanceOf(AbortSignal);
@@ -455,7 +560,7 @@ describe("Szum (unit)", () => {
       });
 
       try {
-        await szum.render(VALID_CONFIG);
+        await szum.render(VALID_DOCUMENT);
         expect.unreachable("should have thrown");
       } catch (err) {
         expect(err).toBeInstanceOf(SzumConnectionError);
@@ -476,7 +581,7 @@ describe("Szum (unit)", () => {
         createMockResponse({ body: JSON.stringify(CHART_OBJECT) }),
       );
 
-      await szum.charts.create(VALID_CONFIG);
+      await szum.charts.create(VALID_DOCUMENT);
 
       expect(fetchMock).toHaveBeenCalledOnce();
       const [url, init] = fetchMock.mock.calls[0];
@@ -484,7 +589,7 @@ describe("Szum (unit)", () => {
       expect(init?.method).toBe("POST");
 
       const body = JSON.parse(init?.body as string);
-      expect(body.config).toEqual({ ...VALID_CONFIG, version: SCHEMA_VERSION });
+      expect(body.document).toEqual(RESOLVED_DOCUMENT);
     });
 
     it("sends an explicit saved-chart title", async () => {
@@ -496,7 +601,7 @@ describe("Szum (unit)", () => {
         createMockResponse({ body: JSON.stringify(CHART_OBJECT) }),
       );
 
-      await szum.charts.create(VALID_CONFIG, { title: "API revenue" });
+      await szum.charts.create(VALID_DOCUMENT, { title: "API revenue" });
 
       const [, init] = fetchMock.mock.calls[0];
       expect(JSON.parse(init?.body as string).title).toBe("API revenue");
@@ -511,7 +616,7 @@ describe("Szum (unit)", () => {
         createMockResponse({ body: JSON.stringify(CHART_OBJECT) }),
       );
 
-      const result = await szum.charts.create(VALID_CONFIG);
+      const result = await szum.charts.create(VALID_DOCUMENT);
 
       expect(result).toEqual(CHART_OBJECT);
     });
@@ -525,7 +630,7 @@ describe("Szum (unit)", () => {
         createMockResponse({ body: JSON.stringify(CHART_OBJECT) }),
       );
 
-      await szum.charts.create(VALID_CONFIG);
+      await szum.charts.create(VALID_DOCUMENT);
 
       const [, init] = fetchMock.mock.calls[0];
       const headers = init?.headers as Record<string, string>;
@@ -542,7 +647,7 @@ describe("Szum (unit)", () => {
         createMockResponse({ body: JSON.stringify(CHART_OBJECT) }),
       );
 
-      await szum.charts.create(VALID_CONFIG, { idempotencyKey: "key-123" });
+      await szum.charts.create(VALID_DOCUMENT, { idempotencyKey: "key-123" });
 
       const [, init] = fetchMock.mock.calls[0];
       const headers = init?.headers as Record<string, string>;
@@ -558,8 +663,8 @@ describe("Szum (unit)", () => {
         createMockResponse({ body: JSON.stringify(CHART_OBJECT) }),
       );
 
-      await szum.charts.create(VALID_CONFIG);
-      await szum.charts.create(VALID_CONFIG);
+      await szum.charts.create(VALID_DOCUMENT);
+      await szum.charts.create(VALID_DOCUMENT);
 
       const headersFor = (i: number) =>
         fetchMock.mock.calls[i][1]?.headers as Record<string, string>;
@@ -583,7 +688,7 @@ describe("Szum (unit)", () => {
       );
 
       try {
-        await szum.charts.create(VALID_CONFIG);
+        await szum.charts.create(VALID_DOCUMENT);
         expect.unreachable("should have thrown");
       } catch (err) {
         expect(err).toBeInstanceOf(SzumAPIError);
@@ -606,7 +711,7 @@ describe("Szum (unit)", () => {
       );
 
       try {
-        await szum.charts.create(VALID_CONFIG);
+        await szum.charts.create(VALID_DOCUMENT);
         expect.unreachable("should have thrown");
       } catch (err) {
         expect(err).toBeInstanceOf(SzumAPIError);
@@ -629,7 +734,7 @@ describe("Szum (unit)", () => {
       );
 
       try {
-        await szum.charts.create(VALID_CONFIG);
+        await szum.charts.create(VALID_DOCUMENT);
         expect.unreachable("should have thrown");
       } catch (err) {
         expect(err).toBeInstanceOf(SzumAPIError);
@@ -649,7 +754,7 @@ describe("Szum (unit)", () => {
       );
 
       try {
-        await szum.charts.create(VALID_CONFIG);
+        await szum.charts.create(VALID_DOCUMENT);
         expect.unreachable("should have thrown");
       } catch (err) {
         expect(err).toBeInstanceOf(SzumAPIError);
@@ -669,7 +774,7 @@ describe("Szum (unit)", () => {
       );
 
       try {
-        await szum.charts.create(VALID_CONFIG);
+        await szum.charts.create(VALID_DOCUMENT);
         expect.unreachable("should have thrown");
       } catch (err) {
         expect(err).toBeInstanceOf(SzumAPIError);
@@ -688,60 +793,78 @@ describe("Szum (unit)", () => {
           status: 403,
           statusText: "Forbidden",
           body: JSON.stringify({
-            error: "Saved charts are only available on the Pro plan.",
+            error: {
+              code: "plan_required",
+              message: "Saved charts are only available on the Pro plan.",
+              retryable: false,
+            },
           }),
         }),
       );
 
       try {
-        await szum.charts.create(VALID_CONFIG);
+        await szum.charts.create(VALID_DOCUMENT);
         expect.unreachable("should have thrown");
       } catch (err) {
         expect(err).toBeInstanceOf(SzumError);
         const szumErr = err as SzumError;
         expect(szumErr.status).toBe(403);
         expect(szumErr.message).toContain("Pro plan");
+        expect(szumErr.code).toBe("plan_required");
       }
     });
   });
 
   describe("validateChart", () => {
-    it("uses the anonymous validation endpoint and returns diagnostics", async () => {
-      fetchMock.mockResolvedValue(
-        createMockResponse({
-          body: JSON.stringify({
-            valid: true,
-            message: "Valid chart config",
-            errors: [],
-            diagnostics: [],
+    it.each([
+      { chart: VALID_DOCUMENT, explicitVersion: false },
+      {
+        chart: {
+          ...VALID_DOCUMENT,
+          version: SCHEMA_VERSION,
+        } satisfies ChartDocument,
+        explicitVersion: true,
+      },
+    ])(
+      "validates the document (explicit version: $explicitVersion)",
+      async ({ chart }) => {
+        fetchMock.mockResolvedValue(
+          createMockResponse({
+            body: JSON.stringify({
+              valid: true,
+              diagnostics: [],
+            }),
           }),
-        }),
-      );
+        );
 
-      const result = await validateChart(VALID_CONFIG, {
-        baseUrl: "https://test.szum.io",
-      });
+        const result = await validateChart(chart, {
+          baseUrl: "https://test.szum.io",
+        });
 
-      const [url, init] = fetchMock.mock.calls[0];
-      expect(url).toBe("https://test.szum.io/validate");
-      expect((init?.headers as Record<string, string>).Authorization).toBe(
-        undefined,
-      );
-      expect(result).toEqual({
-        valid: true,
-        message: "Valid chart config",
-        errors: [],
-        diagnostics: [],
-      });
-    });
+        const [url, init] = fetchMock.mock.calls[0];
+        expect(url).toBe("https://test.szum.io/validate");
+        expect(JSON.parse(init?.body as string)).toEqual({
+          ...VALID_DOCUMENT,
+          version: SCHEMA_VERSION,
+          config: { ...VALID_CONFIG, version: SCHEMA_VERSION },
+        });
+        expect((init?.headers as Record<string, string>).Authorization).toBe(
+          undefined,
+        );
+        expect(result).toEqual({
+          valid: true,
+          diagnostics: [],
+        });
+      },
+    );
 
     it("returns a structured invalid result from HTTP 400", async () => {
       const issue = {
-        code: "schema_invalid",
+        code: "invalid_structure",
         severity: "error",
-        path: [],
+        path: "",
         message: "Invalid config",
-        details: {},
+        details: { reason: "schema_invalid" },
       };
       fetchMock.mockResolvedValue(
         createMockResponse({
@@ -749,16 +872,16 @@ describe("Szum (unit)", () => {
           status: 400,
           body: JSON.stringify({
             valid: false,
-            message: "Invalid config",
-            errors: [issue],
             diagnostics: [issue],
           }),
         }),
       );
 
       await expect(
-        validateChart(VALID_CONFIG, { baseUrl: "https://test.szum.io" }),
-      ).resolves.toMatchObject({ valid: false, errors: [issue] });
+        validateChart(VALID_DOCUMENT, {
+          baseUrl: "https://test.szum.io",
+        }),
+      ).resolves.toMatchObject({ valid: false, diagnostics: [issue] });
     });
   });
 
@@ -816,7 +939,13 @@ describe("Szum (unit)", () => {
           ok: false,
           status: 404,
           statusText: "Not Found",
-          body: JSON.stringify({ error: "Chart not found." }),
+          body: JSON.stringify({
+            error: {
+              code: "not_found",
+              message: "Chart not found.",
+              retryable: false,
+            },
+          }),
         }),
       );
 
@@ -830,7 +959,13 @@ describe("Szum (unit)", () => {
           ok: false,
           status: 500,
           statusText: "Internal Server Error",
-          body: JSON.stringify({ error: "boom" }),
+          body: JSON.stringify({
+            error: {
+              code: "temporarily_unavailable",
+              message: "boom",
+              retryable: true,
+            },
+          }),
         }),
       );
 
@@ -866,17 +1001,16 @@ describe("Szum (unit)", () => {
     });
   });
 
-  describe("charts.getConfig", () => {
-    it("GETs /api/charts/{id}/config and returns the config", async () => {
+  describe("charts.getDocumentState", () => {
+    it("GETs /api/charts/{id}/document and returns owner state", async () => {
       const szum = new Szum({
         apiKey: "sk_test",
         baseUrl: "https://test.szum.io",
       });
-      const config = { version: SCHEMA_VERSION, marks: [] };
       fetchMock.mockResolvedValue(
         createMockResponse({
           body: JSON.stringify({
-            config,
+            document: RESOLVED_DOCUMENT,
             draft: null,
             publishedAt: "2024-06-01T00:00:00.000Z",
             title: "Quarterly revenue",
@@ -884,12 +1018,17 @@ describe("Szum (unit)", () => {
         }),
       );
 
-      const result = await szum.charts.getConfig("abc123");
+      const result = await szum.charts.getDocumentState("abc123");
 
       const [url, init] = fetchMock.mock.calls[0];
-      expect(url).toBe("https://test.szum.io/api/charts/abc123/config");
+      expect(url).toBe("https://test.szum.io/api/charts/abc123/document");
       expect(init?.method).toBe("GET");
-      expect(result).toEqual(config);
+      expect(result).toEqual({
+        document: RESOLVED_DOCUMENT,
+        draft: null,
+        publishedAt: "2024-06-01T00:00:00.000Z",
+        title: "Quarterly revenue",
+      });
     });
 
     it("preserves the owner document and draft-only state", async () => {
@@ -897,27 +1036,26 @@ describe("Szum (unit)", () => {
         apiKey: "sk_test",
         baseUrl: "https://test.szum.io",
       });
-      const draft = { version: SCHEMA_VERSION, marks: [] };
       fetchMock.mockResolvedValue(
         createMockResponse({
           body: JSON.stringify({
-            config: null,
-            draft,
+            document: null,
+            draft: RESOLVED_DOCUMENT,
             publishedAt: null,
             title: "Draft chart",
           }),
         }),
       );
 
-      await expect(szum.charts.getDocument("abc123")).resolves.toEqual({
-        config: null,
-        draft,
+      await expect(szum.charts.getDocumentState("abc123")).resolves.toEqual({
+        document: null,
+        draft: RESOLVED_DOCUMENT,
         publishedAt: null,
         title: "Draft chart",
       });
     });
 
-    it("throws SzumAPIError when 'config' is missing", async () => {
+    it("throws SzumAPIError when 'document' is missing", async () => {
       const szum = new Szum({
         apiKey: "sk_test",
         baseUrl: "https://test.szum.io",
@@ -926,40 +1064,41 @@ describe("Szum (unit)", () => {
         createMockResponse({ body: JSON.stringify({}) }),
       );
 
-      await expect(szum.charts.getConfig("abc123")).rejects.toBeInstanceOf(
-        SzumAPIError,
-      );
+      await expect(
+        szum.charts.getDocumentState("abc123"),
+      ).rejects.toBeInstanceOf(SzumAPIError);
     });
   });
 
-  describe("charts.getConfigs", () => {
-    it("GETs /api/charts/configs?ids=… and returns the configs", async () => {
+  describe("charts.getDocuments", () => {
+    it("GETs /api/charts/documents?ids=… and returns documents", async () => {
       const szum = new Szum({
         apiKey: "sk_test",
         baseUrl: "https://test.szum.io",
       });
-      const config = { version: SCHEMA_VERSION, marks: [] };
       fetchMock.mockResolvedValue(
         createMockResponse({
           body: JSON.stringify({
-            configs: [
-              { id: "a", config },
-              { id: "b", config },
+            documents: [
+              { id: "a", document: RESOLVED_DOCUMENT },
+              { id: "b", document: RESOLVED_DOCUMENT },
             ],
             missing: [{ id: "c", reason: "not_found" }],
           }),
         }),
       );
 
-      const result = await szum.charts.getConfigs(["a", "b", "c"]);
+      const result = await szum.charts.getDocuments(["a", "b", "c"]);
 
       const [url, init] = fetchMock.mock.calls[0];
-      expect(url).toBe("https://test.szum.io/api/charts/configs?ids=a%2Cb%2Cc");
+      expect(url).toBe(
+        "https://test.szum.io/api/charts/documents?ids=a%2Cb%2Cc",
+      );
       expect(init?.method).toBe("GET");
       expect(result).toEqual({
-        configs: [
-          { id: "a", config },
-          { id: "b", config },
+        documents: [
+          { id: "a", document: RESOLVED_DOCUMENT },
+          { id: "b", document: RESOLVED_DOCUMENT },
         ],
         missing: [{ id: "c", reason: "not_found" }],
       });
@@ -973,7 +1112,7 @@ describe("Szum (unit)", () => {
       fetchMock.mockResolvedValue(
         createMockResponse({
           body: JSON.stringify({
-            configs: [],
+            documents: [],
             missing: [
               { id: "c", reason: "rate_limited" },
               { id: "d", reason: "unavailable" },
@@ -982,7 +1121,7 @@ describe("Szum (unit)", () => {
         }),
       );
 
-      const result = await szum.charts.getConfigs(["c", "d"]);
+      const result = await szum.charts.getDocuments(["c", "d"]);
 
       expect(result.missing).toEqual([
         { id: "c", reason: "rate_limited" },
@@ -998,27 +1137,27 @@ describe("Szum (unit)", () => {
       fetchMock.mockResolvedValue(
         createMockResponse({
           body: JSON.stringify({
-            configs: [],
+            documents: [],
             missing: [{ id: "c" }, { id: "d", reason: 42 }],
           }),
         }),
       );
 
-      await expect(szum.charts.getConfigs(["c", "d"])).rejects.toBeInstanceOf(
+      await expect(szum.charts.getDocuments(["c", "d"])).rejects.toBeInstanceOf(
         SzumAPIError,
       );
     });
 
     it("throws SzumInvalidRequestError when ids is empty", async () => {
       const szum = new Szum({ apiKey: "sk_test" });
-      await expect(szum.charts.getConfigs([])).rejects.toBeInstanceOf(
+      await expect(szum.charts.getDocuments([])).rejects.toBeInstanceOf(
         SzumInvalidRequestError,
       );
     });
   });
 
   describe("charts.update", () => {
-    it("PUTs the config to /api/charts/{id}/config and returns the chart object", async () => {
+    it("PUTs the document to /api/charts/{id}/document and returns the chart object", async () => {
       const szum = new Szum({
         apiKey: "sk_test",
         baseUrl: "https://test.szum.io",
@@ -1027,21 +1166,21 @@ describe("Szum (unit)", () => {
         createMockResponse({ body: JSON.stringify(CHART_OBJECT) }),
       );
 
-      const result = await szum.charts.update("abc123", VALID_CONFIG);
+      const result = await szum.charts.update("abc123", VALID_DOCUMENT);
 
       const [url, init] = fetchMock.mock.calls[0];
-      expect(url).toBe("https://test.szum.io/api/charts/abc123/config");
+      expect(url).toBe("https://test.szum.io/api/charts/abc123/document");
       expect(init?.method).toBe("PUT");
       const body = JSON.parse(init?.body as string);
-      expect(body.config).toEqual({ ...VALID_CONFIG, version: SCHEMA_VERSION });
+      expect(body.document).toEqual(RESOLVED_DOCUMENT);
       expect(result).toEqual(CHART_OBJECT);
     });
 
     it("throws SzumInvalidRequestError when id is empty", async () => {
       const szum = new Szum({ apiKey: "sk_test" });
-      await expect(szum.charts.update("", VALID_CONFIG)).rejects.toBeInstanceOf(
-        SzumInvalidRequestError,
-      );
+      await expect(
+        szum.charts.update("", VALID_DOCUMENT),
+      ).rejects.toBeInstanceOf(SzumInvalidRequestError);
     });
   });
 
@@ -1220,7 +1359,7 @@ describe("Szum (unit)", () => {
         createMockResponse({ body: new ArrayBuffer(0) }),
       );
 
-      await szum.render(VALID_CONFIG);
+      await szum.render(VALID_DOCUMENT);
 
       const [url] = fetchMock.mock.calls[0];
       expect(url).toBe("https://szum.io/chart");
@@ -1289,7 +1428,7 @@ describe("Szum (unit)", () => {
       });
 
       try {
-        await szum.render(VALID_CONFIG, { timeout: 1 });
+        await szum.render(VALID_DOCUMENT, { timeout: 1 });
         expect.unreachable("should have thrown");
       } catch (err) {
         expect(err).toBeInstanceOf(SzumConnectionError);
@@ -1314,7 +1453,9 @@ describe("Szum (unit)", () => {
       });
 
       const controller = new AbortController();
-      const promise = szum.render(VALID_CONFIG, { signal: controller.signal });
+      const promise = szum.render(VALID_DOCUMENT, {
+        signal: controller.signal,
+      });
       controller.abort();
 
       await expect(promise).rejects.toThrow(/aborted/i);
@@ -1344,14 +1485,20 @@ describe("Szum (unit)", () => {
           return createMockResponse({
             ok: false,
             status: 429,
-            body: JSON.stringify({ error: "slow down" }),
+            body: JSON.stringify({
+              error: {
+                code: "rate_limited",
+                message: "slow down",
+                retryable: true,
+              },
+            }),
             headers: { "Retry-After": "1" },
           });
         }
         return createMockResponse({ body: new ArrayBuffer(0) });
       });
 
-      const promise = szum.render(VALID_CONFIG);
+      const promise = szum.render(VALID_DOCUMENT);
       await vi.advanceTimersByTimeAsync(10_000);
       await promise;
 
@@ -1368,7 +1515,9 @@ describe("Szum (unit)", () => {
         createMockResponse({ ok: false, status: 502, body: "bad gateway" }),
       );
 
-      await expect(szum.render(VALID_CONFIG)).rejects.toBeInstanceOf(SzumError);
+      await expect(szum.render(VALID_DOCUMENT)).rejects.toBeInstanceOf(
+        SzumError,
+      );
       expect(fetchMock).toHaveBeenCalledOnce();
     });
 
@@ -1425,7 +1574,7 @@ describe("Szum (unit)", () => {
       });
       fetchMock.mockRejectedValue(new TypeError("fetch failed"));
 
-      await expect(szum.render(VALID_CONFIG)).rejects.toBeInstanceOf(
+      await expect(szum.render(VALID_DOCUMENT)).rejects.toBeInstanceOf(
         SzumConnectionError,
       );
       expect(fetchMock).toHaveBeenCalledOnce();
@@ -1441,7 +1590,13 @@ describe("Szum (unit)", () => {
           createMockResponse({
             ok: false,
             status: 409,
-            body: JSON.stringify({ error: "Still processing" }),
+            body: JSON.stringify({
+              error: {
+                code: "temporarily_unavailable",
+                message: "Still processing",
+                retryable: true,
+              },
+            }),
             headers: { "Retry-After": "2" },
           }),
         )
@@ -1449,11 +1604,16 @@ describe("Szum (unit)", () => {
           createMockResponse({ body: JSON.stringify(CHART_OBJECT) }),
         );
 
-      const promise = szum.charts.create(VALID_CONFIG);
+      const promise = szum.charts.create(VALID_DOCUMENT);
       await vi.advanceTimersByTimeAsync(2_100);
 
       await expect(promise).resolves.toEqual(CHART_OBJECT);
       expect(fetchMock).toHaveBeenCalledTimes(2);
+      const keys = fetchMock.mock.calls.map(([, init]) =>
+        new Headers(init?.headers).get("Idempotency-Key"),
+      );
+      expect(keys[0]).toBeTruthy();
+      expect(keys[1]).toBe(keys[0]);
     });
 
     it("does NOT retry 500", async () => {
@@ -1470,7 +1630,9 @@ describe("Szum (unit)", () => {
         }),
       );
 
-      await expect(szum.render(VALID_CONFIG)).rejects.toBeInstanceOf(SzumError);
+      await expect(szum.render(VALID_DOCUMENT)).rejects.toBeInstanceOf(
+        SzumError,
+      );
       expect(fetchMock).toHaveBeenCalledTimes(1);
     });
 
@@ -1484,11 +1646,19 @@ describe("Szum (unit)", () => {
         createMockResponse({
           ok: false,
           status: 401,
-          body: JSON.stringify({ error: "bad key" }),
+          body: JSON.stringify({
+            error: {
+              code: "authentication_required",
+              message: "bad key",
+              retryable: false,
+            },
+          }),
         }),
       );
 
-      await expect(szum.render(VALID_CONFIG)).rejects.toBeInstanceOf(SzumError);
+      await expect(szum.render(VALID_DOCUMENT)).rejects.toBeInstanceOf(
+        SzumError,
+      );
       expect(fetchMock).toHaveBeenCalledTimes(1);
     });
 
@@ -1529,7 +1699,9 @@ describe("Szum (unit)", () => {
         }),
       );
 
-      await expect(szum.render(VALID_CONFIG)).rejects.toBeInstanceOf(SzumError);
+      await expect(szum.render(VALID_DOCUMENT)).rejects.toBeInstanceOf(
+        SzumError,
+      );
       expect(fetchMock).toHaveBeenCalledTimes(1);
     });
 
@@ -1553,7 +1725,7 @@ describe("Szum (unit)", () => {
         return createMockResponse({ body: new ArrayBuffer(0) });
       });
 
-      const promise = szum.render(VALID_CONFIG);
+      const promise = szum.render(VALID_DOCUMENT);
 
       await vi.advanceTimersByTimeAsync(4_000);
       expect(callCount).toBe(1);

@@ -1,218 +1,1364 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "object",
-  "properties": {
-    "version": {
-      "type": "string",
-      "const": "2026-03-20"
-    },
-    "format": {
-      "type": "string",
-      "enum": [
-        "svg",
-        "png"
-      ]
-    },
-    "scale": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 4
-    },
-    "width": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 4096
-    },
-    "height": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 4096
-    },
-    "plotWidth": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 4096
-    },
-    "plotHeight": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 4096
-    },
-    "margin": {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "anyOf": [
+    {
       "type": "object",
       "properties": {
-        "top": {
-          "type": "number"
+        "version": {
+          "type": "string",
+          "const": "2026-09-26"
         },
-        "right": {
-          "type": "number"
+        "title": {
+          "type": "string",
+          "minLength": 1
         },
-        "bottom": {
-          "type": "number"
+        "subtitle": {
+          "type": "string",
+          "minLength": 1
         },
-        "left": {
-          "type": "number"
+        "accessibilityDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headerAlign": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]{2,3}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-[xX](?:-[A-Za-z0-9]{1,8})+)?$"
+        },
+        "theme": {
+          "$ref": "#/$defs/ThemeName"
+        },
+        "themeOverrides": {
+          "$ref": "#/$defs/ThemeOverrides"
+        },
+        "plotBorder": {
+          "type": "boolean"
+        },
+        "order": {
+          "$ref": "#/$defs/CategoryOrder"
+        },
+        "categoryAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "valueAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "color": {
+          "$ref": "#/$defs/CategoricalColor"
+        },
+        "annotations": {
+          "$ref": "#/$defs/CartesianAnnotations"
+        },
+        "references": {
+          "$ref": "#/$defs/CategoricalReferences"
+        },
+        "category": {
+          "$ref": "#/$defs/BarCategoryRole"
+        },
+        "line": {
+          "$ref": "#/$defs/PromotedLine"
+        },
+        "cornerRadius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "values": {
+          "$ref": "#/$defs/SimpleBarValuesRole"
+        },
+        "spacing": {
+          "$ref": "#/$defs/CategorySpacing"
+        },
+        "labels": {
+          "$ref": "#/$defs/PositionableBarLabels"
+        },
+        "type": {
+          "type": "string",
+          "const": "column"
         }
-      }
+      },
+      "required": [
+        "version",
+        "category",
+        "values",
+        "type"
+      ],
+      "additionalProperties": false
     },
-    "locale": {
-      "description": "Locale identifier accepted by JavaScript Intl and associated with the chart content, such as en, pl, or zh-Hant.",
-      "type": "string",
-      "pattern": "^(?:[A-Za-z]{2,3}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-[xX](?:-[A-Za-z0-9]{1,8})+)?$"
-    },
-    "title": {
-      "type": "string"
-    },
-    "subtitle": {
-      "type": "string"
-    },
-    "footer": {
-      "description": "Caption below the chart (a source line, methodology note, date). URLs, bare domains, and [label](url) links in it are auto-detected and rendered as inline links on every surface.",
-      "type": "string"
-    },
-    "headerAlign": {
-      "type": "string",
-      "enum": [
-        "left",
-        "center",
-        "right"
-      ]
-    },
-    "attribution": {
-      "description": "Show a small \"Made with Szum\" credit in the bottom-right. Always on for free and keyless renders; Creator and Pro omit it by default and set true to opt in.",
-      "type": "boolean"
-    },
-    "theme": {
-      "default": "editorial",
-      "type": "string",
-      "enum": [
-        "editorial",
-        "clean",
-        "noir",
-        "loud",
-        "soft",
-        "technical"
-      ]
-    },
-    "themeOverrides": {
+    {
       "type": "object",
       "properties": {
-        "backgroundColor": {
-          "type": "string"
+        "version": {
+          "type": "string",
+          "const": "2026-09-26"
         },
-        "colors": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "title": {
+          "type": "string",
+          "minLength": 1
         },
-        "sequentialRange": {
-          "type": "array",
-          "items": [
+        "subtitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessibilityDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headerAlign": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]{2,3}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-[xX](?:-[A-Za-z0-9]{1,8})+)?$"
+        },
+        "theme": {
+          "$ref": "#/$defs/ThemeName"
+        },
+        "themeOverrides": {
+          "$ref": "#/$defs/ThemeOverrides"
+        },
+        "plotBorder": {
+          "type": "boolean"
+        },
+        "category": {
+          "$ref": "#/$defs/RangeCategoryRole"
+        },
+        "values": {
+          "$ref": "#/$defs/RangeValuesRole"
+        },
+        "order": {
+          "$ref": "#/$defs/RangeCategoryOrder"
+        },
+        "categoryAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "valueAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "color": {
+          "$ref": "#/$defs/CategoricalColor"
+        },
+        "spacing": {
+          "$ref": "#/$defs/CategorySpacing"
+        },
+        "cornerRadius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "type": {
+          "type": "string",
+          "const": "column"
+        }
+      },
+      "required": [
+        "version",
+        "category",
+        "values",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "2026-09-26"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessibilityDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headerAlign": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]{2,3}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-[xX](?:-[A-Za-z0-9]{1,8})+)?$"
+        },
+        "theme": {
+          "$ref": "#/$defs/ThemeName"
+        },
+        "themeOverrides": {
+          "$ref": "#/$defs/ThemeOverrides"
+        },
+        "plotBorder": {
+          "type": "boolean"
+        },
+        "order": {
+          "$ref": "#/$defs/CategoryOrder"
+        },
+        "categoryAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "valueAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "color": {
+          "$ref": "#/$defs/CategoricalColor"
+        },
+        "annotations": {
+          "$ref": "#/$defs/CartesianAnnotations"
+        },
+        "references": {
+          "$ref": "#/$defs/CategoricalReferences"
+        },
+        "category": {
+          "$ref": "#/$defs/BarCategoryRole"
+        },
+        "line": {
+          "$ref": "#/$defs/PromotedLine"
+        },
+        "cornerRadius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "values": {
+          "$ref": "#/$defs/SeriesLinearValuesRoleWithPercent"
+        },
+        "arrangement": {
+          "$ref": "#/$defs/StackedArrangement"
+        },
+        "spacing": {
+          "$ref": "#/$defs/CategorySpacing"
+        },
+        "labels": {
+          "$ref": "#/$defs/StackedBarLabels"
+        },
+        "type": {
+          "type": "string",
+          "const": "column"
+        }
+      },
+      "required": [
+        "version",
+        "category",
+        "values",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "2026-09-26"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessibilityDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headerAlign": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]{2,3}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-[xX](?:-[A-Za-z0-9]{1,8})+)?$"
+        },
+        "theme": {
+          "$ref": "#/$defs/ThemeName"
+        },
+        "themeOverrides": {
+          "$ref": "#/$defs/ThemeOverrides"
+        },
+        "plotBorder": {
+          "type": "boolean"
+        },
+        "order": {
+          "$ref": "#/$defs/CategoryOrder"
+        },
+        "categoryAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "valueAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "color": {
+          "$ref": "#/$defs/CategoricalColor"
+        },
+        "annotations": {
+          "$ref": "#/$defs/CartesianAnnotations"
+        },
+        "references": {
+          "$ref": "#/$defs/CategoricalReferences"
+        },
+        "category": {
+          "$ref": "#/$defs/BarCategoryRole"
+        },
+        "line": {
+          "$ref": "#/$defs/PromotedLine"
+        },
+        "cornerRadius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "values": {
+          "$ref": "#/$defs/SeriesLinearValuesRoleWithPercent"
+        },
+        "arrangement": {
+          "$ref": "#/$defs/StackedArrangement"
+        },
+        "spacing": {
+          "$ref": "#/$defs/CategorySpacing"
+        },
+        "labels": {
+          "$ref": "#/$defs/StackedBarLabels"
+        },
+        "totals": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string",
+          "const": "column"
+        }
+      },
+      "required": [
+        "version",
+        "category",
+        "values",
+        "totals",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "2026-09-26"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessibilityDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headerAlign": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]{2,3}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-[xX](?:-[A-Za-z0-9]{1,8})+)?$"
+        },
+        "theme": {
+          "$ref": "#/$defs/ThemeName"
+        },
+        "themeOverrides": {
+          "$ref": "#/$defs/ThemeOverrides"
+        },
+        "plotBorder": {
+          "type": "boolean"
+        },
+        "order": {
+          "$ref": "#/$defs/CategoryOrder"
+        },
+        "categoryAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "valueAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "color": {
+          "$ref": "#/$defs/CategoricalColorMapping"
+        },
+        "annotations": {
+          "$ref": "#/$defs/CartesianAnnotations"
+        },
+        "references": {
+          "$ref": "#/$defs/CategoricalReferences"
+        },
+        "category": {
+          "$ref": "#/$defs/BarCategoryRole"
+        },
+        "line": {
+          "$ref": "#/$defs/PromotedLine"
+        },
+        "cornerRadius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "values": {
+          "$ref": "#/$defs/SeriesLinearValuesRole"
+        },
+        "arrangement": {
+          "$ref": "#/$defs/GroupedArrangement"
+        },
+        "spacing": {
+          "$ref": "#/$defs/BarSpacingPreference"
+        },
+        "labels": {
+          "$ref": "#/$defs/PositionableBarLabels"
+        },
+        "type": {
+          "type": "string",
+          "const": "column"
+        }
+      },
+      "required": [
+        "version",
+        "category",
+        "values",
+        "arrangement",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "2026-09-26"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessibilityDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headerAlign": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]{2,3}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-[xX](?:-[A-Za-z0-9]{1,8})+)?$"
+        },
+        "theme": {
+          "$ref": "#/$defs/ThemeName"
+        },
+        "themeOverrides": {
+          "$ref": "#/$defs/ThemeOverrides"
+        },
+        "plotBorder": {
+          "type": "boolean"
+        },
+        "order": {
+          "$ref": "#/$defs/CategoryOrder"
+        },
+        "categoryAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "valueAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "color": {
+          "$ref": "#/$defs/CategoricalColorMapping"
+        },
+        "annotations": {
+          "$ref": "#/$defs/CartesianAnnotations"
+        },
+        "references": {
+          "$ref": "#/$defs/CategoricalReferences"
+        },
+        "category": {
+          "$ref": "#/$defs/BarCategoryRole"
+        },
+        "line": {
+          "$ref": "#/$defs/PromotedLine"
+        },
+        "cornerRadius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "values": {
+          "$ref": "#/$defs/SeriesLinearValuesRoleWithPercent"
+        },
+        "arrangement": {
+          "$ref": "#/$defs/NormalizedArrangement"
+        },
+        "spacing": {
+          "$ref": "#/$defs/CategorySpacing"
+        },
+        "labels": {
+          "$ref": "#/$defs/StackedBarLabels"
+        },
+        "type": {
+          "type": "string",
+          "const": "column"
+        }
+      },
+      "required": [
+        "version",
+        "category",
+        "values",
+        "arrangement",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "2026-09-26"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessibilityDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headerAlign": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]{2,3}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-[xX](?:-[A-Za-z0-9]{1,8})+)?$"
+        },
+        "theme": {
+          "$ref": "#/$defs/ThemeName"
+        },
+        "themeOverrides": {
+          "$ref": "#/$defs/ThemeOverrides"
+        },
+        "plotBorder": {
+          "type": "boolean"
+        },
+        "order": {
+          "$ref": "#/$defs/CategoryOrder"
+        },
+        "categoryAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "valueAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "color": {
+          "$ref": "#/$defs/CategoricalColor"
+        },
+        "annotations": {
+          "$ref": "#/$defs/CartesianAnnotations"
+        },
+        "references": {
+          "$ref": "#/$defs/CategoricalReferences"
+        },
+        "category": {
+          "$ref": "#/$defs/BarCategoryRole"
+        },
+        "line": {
+          "$ref": "#/$defs/PromotedLine"
+        },
+        "cornerRadius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "values": {
+          "$ref": "#/$defs/SimpleBarValuesRole"
+        },
+        "spacing": {
+          "$ref": "#/$defs/CategorySpacing"
+        },
+        "labels": {
+          "$ref": "#/$defs/PositionableBarLabels"
+        },
+        "type": {
+          "type": "string",
+          "const": "bar"
+        }
+      },
+      "required": [
+        "version",
+        "category",
+        "values",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "2026-09-26"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessibilityDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headerAlign": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]{2,3}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-[xX](?:-[A-Za-z0-9]{1,8})+)?$"
+        },
+        "theme": {
+          "$ref": "#/$defs/ThemeName"
+        },
+        "themeOverrides": {
+          "$ref": "#/$defs/ThemeOverrides"
+        },
+        "plotBorder": {
+          "type": "boolean"
+        },
+        "category": {
+          "$ref": "#/$defs/RangeCategoryRole"
+        },
+        "values": {
+          "$ref": "#/$defs/RangeValuesRole"
+        },
+        "order": {
+          "$ref": "#/$defs/RangeCategoryOrder"
+        },
+        "categoryAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "valueAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "color": {
+          "$ref": "#/$defs/CategoricalColor"
+        },
+        "spacing": {
+          "$ref": "#/$defs/CategorySpacing"
+        },
+        "cornerRadius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "type": {
+          "type": "string",
+          "const": "bar"
+        }
+      },
+      "required": [
+        "version",
+        "category",
+        "values",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "2026-09-26"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessibilityDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headerAlign": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]{2,3}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-[xX](?:-[A-Za-z0-9]{1,8})+)?$"
+        },
+        "theme": {
+          "$ref": "#/$defs/ThemeName"
+        },
+        "themeOverrides": {
+          "$ref": "#/$defs/ThemeOverrides"
+        },
+        "plotBorder": {
+          "type": "boolean"
+        },
+        "order": {
+          "$ref": "#/$defs/CategoryOrder"
+        },
+        "categoryAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "valueAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "color": {
+          "$ref": "#/$defs/CategoricalColor"
+        },
+        "annotations": {
+          "$ref": "#/$defs/CartesianAnnotations"
+        },
+        "references": {
+          "$ref": "#/$defs/CategoricalReferences"
+        },
+        "category": {
+          "$ref": "#/$defs/BarCategoryRole"
+        },
+        "line": {
+          "$ref": "#/$defs/PromotedLine"
+        },
+        "cornerRadius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "values": {
+          "$ref": "#/$defs/SeriesLinearValuesRoleWithPercent"
+        },
+        "arrangement": {
+          "$ref": "#/$defs/StackedArrangement"
+        },
+        "spacing": {
+          "$ref": "#/$defs/CategorySpacing"
+        },
+        "labels": {
+          "$ref": "#/$defs/StackedBarLabels"
+        },
+        "type": {
+          "type": "string",
+          "const": "bar"
+        }
+      },
+      "required": [
+        "version",
+        "category",
+        "values",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "2026-09-26"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessibilityDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headerAlign": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]{2,3}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-[xX](?:-[A-Za-z0-9]{1,8})+)?$"
+        },
+        "theme": {
+          "$ref": "#/$defs/ThemeName"
+        },
+        "themeOverrides": {
+          "$ref": "#/$defs/ThemeOverrides"
+        },
+        "plotBorder": {
+          "type": "boolean"
+        },
+        "order": {
+          "$ref": "#/$defs/CategoryOrder"
+        },
+        "categoryAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "valueAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "color": {
+          "$ref": "#/$defs/CategoricalColor"
+        },
+        "annotations": {
+          "$ref": "#/$defs/CartesianAnnotations"
+        },
+        "references": {
+          "$ref": "#/$defs/CategoricalReferences"
+        },
+        "category": {
+          "$ref": "#/$defs/BarCategoryRole"
+        },
+        "line": {
+          "$ref": "#/$defs/PromotedLine"
+        },
+        "cornerRadius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "values": {
+          "$ref": "#/$defs/SeriesLinearValuesRoleWithPercent"
+        },
+        "arrangement": {
+          "$ref": "#/$defs/StackedArrangement"
+        },
+        "spacing": {
+          "$ref": "#/$defs/CategorySpacing"
+        },
+        "labels": {
+          "$ref": "#/$defs/StackedBarLabels"
+        },
+        "totals": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string",
+          "const": "bar"
+        }
+      },
+      "required": [
+        "version",
+        "category",
+        "values",
+        "totals",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "2026-09-26"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessibilityDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headerAlign": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]{2,3}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-[xX](?:-[A-Za-z0-9]{1,8})+)?$"
+        },
+        "theme": {
+          "$ref": "#/$defs/ThemeName"
+        },
+        "themeOverrides": {
+          "$ref": "#/$defs/ThemeOverrides"
+        },
+        "plotBorder": {
+          "type": "boolean"
+        },
+        "order": {
+          "$ref": "#/$defs/CategoryOrder"
+        },
+        "categoryAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "valueAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "color": {
+          "$ref": "#/$defs/CategoricalColorMapping"
+        },
+        "annotations": {
+          "$ref": "#/$defs/CartesianAnnotations"
+        },
+        "references": {
+          "$ref": "#/$defs/CategoricalReferences"
+        },
+        "category": {
+          "$ref": "#/$defs/BarCategoryRole"
+        },
+        "line": {
+          "$ref": "#/$defs/PromotedLine"
+        },
+        "cornerRadius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "values": {
+          "$ref": "#/$defs/SeriesLinearValuesRole"
+        },
+        "arrangement": {
+          "$ref": "#/$defs/GroupedArrangement"
+        },
+        "spacing": {
+          "$ref": "#/$defs/BarSpacingPreference"
+        },
+        "labels": {
+          "$ref": "#/$defs/PositionableBarLabels"
+        },
+        "type": {
+          "type": "string",
+          "const": "bar"
+        }
+      },
+      "required": [
+        "version",
+        "category",
+        "values",
+        "arrangement",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "2026-09-26"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessibilityDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headerAlign": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]{2,3}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-[xX](?:-[A-Za-z0-9]{1,8})+)?$"
+        },
+        "theme": {
+          "$ref": "#/$defs/ThemeName"
+        },
+        "themeOverrides": {
+          "$ref": "#/$defs/ThemeOverrides"
+        },
+        "plotBorder": {
+          "type": "boolean"
+        },
+        "order": {
+          "$ref": "#/$defs/CategoryOrder"
+        },
+        "categoryAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "valueAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "color": {
+          "$ref": "#/$defs/CategoricalColorMapping"
+        },
+        "annotations": {
+          "$ref": "#/$defs/CartesianAnnotations"
+        },
+        "references": {
+          "$ref": "#/$defs/CategoricalReferences"
+        },
+        "category": {
+          "$ref": "#/$defs/BarCategoryRole"
+        },
+        "line": {
+          "$ref": "#/$defs/PromotedLine"
+        },
+        "cornerRadius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "values": {
+          "$ref": "#/$defs/SeriesLinearValuesRoleWithPercent"
+        },
+        "arrangement": {
+          "$ref": "#/$defs/NormalizedArrangement"
+        },
+        "spacing": {
+          "$ref": "#/$defs/CategorySpacing"
+        },
+        "labels": {
+          "$ref": "#/$defs/StackedBarLabels"
+        },
+        "type": {
+          "type": "string",
+          "const": "bar"
+        }
+      },
+      "required": [
+        "version",
+        "category",
+        "values",
+        "arrangement",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "2026-09-26"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessibilityDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headerAlign": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]{2,3}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-[xX](?:-[A-Za-z0-9]{1,8})+)?$"
+        },
+        "theme": {
+          "$ref": "#/$defs/ThemeName"
+        },
+        "themeOverrides": {
+          "$ref": "#/$defs/ThemeOverrides"
+        },
+        "plotBorder": {
+          "type": "boolean"
+        },
+        "order": {
+          "$ref": "#/$defs/CategoryOrder"
+        },
+        "categoryAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "valueAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "color": {
+          "$ref": "#/$defs/CategoricalColor"
+        },
+        "annotations": {
+          "$ref": "#/$defs/CartesianAnnotations"
+        },
+        "references": {
+          "$ref": "#/$defs/CategoricalReferences"
+        },
+        "type": {
+          "type": "string",
+          "const": "line"
+        },
+        "category": {
+          "$ref": "#/$defs/CategoryRole"
+        },
+        "values": {
+          "oneOf": [
             {
-              "type": "string"
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "long"
+                },
+                "field": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "series": {
+                  "$ref": "#/$defs/SeriesRole"
+                },
+                "aggregation": {
+                  "type": "string",
+                  "enum": [
+                    "sum",
+                    "average",
+                    "min",
+                    "max",
+                    "median"
+                  ]
+                },
+                "scale": {
+                  "$ref": "#/$defs/ContinuousScale"
+                },
+                "format": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "field"
+              ],
+              "additionalProperties": false,
+              "title": "LineLongValuesRole"
             },
             {
-              "type": "string"
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "wide"
+                },
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1,
+                  "uniqueItems": true
+                },
+                "aggregation": {
+                  "type": "string",
+                  "enum": [
+                    "sum",
+                    "average",
+                    "min",
+                    "max",
+                    "median"
+                  ]
+                },
+                "scale": {
+                  "$ref": "#/$defs/ContinuousScale"
+                },
+                "format": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "fields"
+              ],
+              "additionalProperties": false,
+              "title": "LineWideValuesRole"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "count"
+                },
+                "series": {
+                  "$ref": "#/$defs/SeriesRole"
+                },
+                "scale": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/$defs/LinearScale"
+                    },
+                    {
+                      "$ref": "#/$defs/LogScale"
+                    }
+                  ],
+                  "title": "QuantitativeScale"
+                },
+                "format": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "additionalProperties": false,
+              "title": "CountValuesRole"
             }
           ],
-          "minItems": 2,
-          "maxItems": 2
-        },
-        "fontFamily": {
-          "$ref": "#/$defs/googleFontFamily"
-        },
-        "titleFontFamily": {
-          "$ref": "#/$defs/googleFontFamily"
-        },
-        "numericFontFamily": {
-          "$ref": "#/$defs/googleFontFamily"
-        },
-        "fontSize": {
-          "type": "number"
-        },
-        "titleFontWeight": {
-          "type": "string"
-        },
-        "titleFontSize": {
-          "type": "number"
-        },
-        "subtitleFontSize": {
-          "type": "number"
-        },
-        "titleColor": {
-          "type": "string"
-        },
-        "subtitleColor": {
-          "type": "string"
-        },
-        "titleSubtitleGap": {
-          "type": "number"
-        },
-        "headerGap": {
-          "type": "number"
-        },
-        "footerFontSize": {
-          "type": "number"
-        },
-        "footerColor": {
-          "type": "string"
-        },
-        "footerLinkColor": {
-          "type": "string"
-        },
-        "footerGap": {
-          "type": "number"
-        },
-        "axisLineWidth": {
-          "type": "number"
-        },
-        "axisColor": {
-          "type": "string"
-        },
-        "axisLabelColor": {
-          "type": "string"
-        },
-        "axisLabelFontWeight": {
-          "type": "string"
-        },
-        "gridLineWidth": {
-          "type": "number"
-        },
-        "gridColor": {
-          "type": "string"
-        },
-        "tickSize": {
-          "type": "number"
-        },
-        "tickPadding": {
-          "type": "number"
-        },
-        "tickLabelColor": {
-          "type": "string"
-        },
-        "tickLabelFontWeight": {
-          "type": "string"
-        },
-        "tickDensity": {
-          "type": "number"
-        },
-        "gridLines": {
-          "type": "string",
-          "enum": [
-            "none",
-            "value",
-            "both"
-          ]
-        },
-        "axisFrame": {
-          "type": "string",
-          "enum": [
-            "none",
-            "baseline",
-            "lShape",
-            "full"
-          ]
+          "title": "LineValuesRole"
         },
         "curve": {
           "type": "string",
@@ -222,1079 +1368,877 @@
             "step"
           ]
         },
-        "barPadding": {
-          "type": "number"
+        "stroke": {
+          "$ref": "#/$defs/LineStroke"
         },
-        "barCornerRadius": {
-          "type": "number"
-        },
-        "pieCornerRadius": {
-          "type": "number"
-        },
-        "lineStrokeWidth": {
-          "type": "number"
-        },
-        "dotRadius": {
-          "type": "number"
-        },
-        "labelColor": {
-          "type": "string"
-        },
-        "labelFontSize": {
-          "type": "number"
-        },
-        "labelFontWeight": {
-          "type": "string"
-        },
-        "labelMutedFontWeight": {
-          "type": "string"
-        },
-        "labelMutedOpacity": {
-          "type": "number"
-        },
-        "labelHaloWidth": {
-          "type": "number"
-        }
-      }
-    },
-    "data": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "propertyNames": {
-          "type": "string"
-        },
-        "additionalProperties": {
+        "points": {
           "anyOf": [
             {
-              "type": "string"
+              "type": "boolean"
             },
             {
-              "type": "number"
+              "type": "object",
+              "properties": {
+                "series": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "string",
+                      "number"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                "radius": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "fill": {
+                  "$ref": "#/$defs/Color"
+                },
+                "stroke": {
+                  "$ref": "#/$defs/Stroke"
+                }
+              },
+              "additionalProperties": false
             }
           ]
+        },
+        "labels": {
+          "$ref": "#/$defs/LineLabels"
         }
-      }
+      },
+      "required": [
+        "version",
+        "type",
+        "category",
+        "values"
+      ],
+      "additionalProperties": false
     },
-    "marks": {
-      "minItems": 1,
-      "type": "array",
-      "items": {
-        "oneOf": [
-          {
-            "type": "object",
-            "properties": {
-              "data": {
-                "type": "array",
-                "items": {
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "2026-09-26"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessibilityDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headerAlign": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]{2,3}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-[xX](?:-[A-Za-z0-9]{1,8})+)?$"
+        },
+        "theme": {
+          "$ref": "#/$defs/ThemeName"
+        },
+        "themeOverrides": {
+          "$ref": "#/$defs/ThemeOverrides"
+        },
+        "plotBorder": {
+          "type": "boolean"
+        },
+        "order": {
+          "$ref": "#/$defs/CategoryOrder"
+        },
+        "categoryAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "valueAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "color": {
+          "$ref": "#/$defs/CategoricalColor"
+        },
+        "annotations": {
+          "$ref": "#/$defs/CartesianAnnotations"
+        },
+        "references": {
+          "$ref": "#/$defs/CategoricalReferences"
+        },
+        "type": {
+          "type": "string",
+          "const": "area"
+        },
+        "category": {
+          "$ref": "#/$defs/CategoryRole"
+        },
+        "values": {
+          "anyOf": [
+            {
+              "oneOf": [
+                {
                   "type": "object",
-                  "propertyNames": {
-                    "type": "string"
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "long"
+                    },
+                    "field": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "series": {
+                      "$ref": "#/$defs/SeriesRole"
+                    },
+                    "aggregation": {
+                      "type": "string",
+                      "enum": [
+                        "sum",
+                        "average",
+                        "min",
+                        "max",
+                        "median"
+                      ]
+                    },
+                    "scale": {
+                      "$ref": "#/$defs/LinearScale"
+                    },
+                    "format": {
+                      "type": "string"
+                    }
                   },
-                  "additionalProperties": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "number"
-                      }
-                    ]
-                  }
-                }
-              },
-              "x": {
-                "default": "x",
-                "type": "string"
-              },
-              "y": {
-                "default": "y",
-                "type": "string"
-              },
-              "fill": {
-                "type": "string"
-              },
-              "stroke": {
-                "type": "string"
-              },
-              "strokeWidth": {
-                "default": 1,
-                "type": "number"
-              },
-              "type": {
-                "type": "string",
-                "const": "dot"
-              },
-              "r": {
-                "type": "number"
-              },
-              "label": {
-                "type": "object",
-                "properties": {
-                  "field": {
-                    "type": "string"
-                  },
-                  "format": {
-                    "type": "string"
-                  }
+                  "required": [
+                    "type",
+                    "field"
+                  ],
+                  "additionalProperties": false,
+                  "title": "LinearLongValuesRole"
                 },
-                "required": [
-                  "field"
-                ]
-              }
-            },
-            "required": [
-              "type"
-            ]
-          },
-          {
-            "type": "object",
-            "properties": {
-              "data": {
-                "type": "array",
-                "items": {
+                {
                   "type": "object",
-                  "propertyNames": {
-                    "type": "string"
-                  },
-                  "additionalProperties": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "number"
-                      }
-                    ]
-                  }
-                }
-              },
-              "x": {
-                "default": "x",
-                "type": "string"
-              },
-              "y": {
-                "default": "y",
-                "type": "string"
-              },
-              "fill": {
-                "type": "string"
-              },
-              "stroke": {
-                "type": "string"
-              },
-              "strokeWidth": {
-                "type": "number"
-              },
-              "type": {
-                "type": "string",
-                "const": "line"
-              },
-              "curve": {
-                "type": "string",
-                "enum": [
-                  "linear",
-                  "monotone",
-                  "step"
-                ]
-              },
-              "label": {
-                "anyOf": [
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "end": {
-                        "default": [
-                          "category"
-                        ],
-                        "anyOf": [
-                          {
-                            "type": "boolean"
-                          },
-                          {
-                            "type": "array",
-                            "items": {
-                              "type": "string",
-                              "enum": [
-                                "category",
-                                "value"
-                              ]
-                            }
-                          }
-                        ]
-                      },
-                      "points": {
-                        "default": false,
-                        "anyOf": [
-                          {
-                            "type": "string",
-                            "enum": [
-                              "extrema",
-                              "all",
-                              "ends"
-                            ]
-                          },
-                          {
-                            "type": "boolean",
-                            "const": false
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "at": {
-                                "type": "string",
-                                "enum": [
-                                  "extrema",
-                                  "all",
-                                  "ends"
-                                ]
-                              },
-                              "show": {
-                                "default": [
-                                  "value"
-                                ],
-                                "type": "array",
-                                "items": {
-                                  "type": "string",
-                                  "enum": [
-                                    "value",
-                                    "category"
-                                  ]
-                                }
-                              }
-                            },
-                            "required": [
-                              "at"
-                            ]
-                          }
-                        ]
-                      },
-                      "format": {
-                        "type": "string"
-                      }
-                    }
-                  }
-                ]
-              }
-            },
-            "required": [
-              "type"
-            ]
-          },
-          {
-            "type": "object",
-            "properties": {
-              "data": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "propertyNames": {
-                    "type": "string"
-                  },
-                  "additionalProperties": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "number"
-                      }
-                    ]
-                  }
-                }
-              },
-              "x": {
-                "default": "x",
-                "type": "string"
-              },
-              "y": {
-                "default": "y",
-                "type": "string"
-              },
-              "fill": {
-                "type": "string"
-              },
-              "stroke": {
-                "type": "string"
-              },
-              "strokeWidth": {
-                "default": 1,
-                "type": "number"
-              },
-              "type": {
-                "type": "string",
-                "const": "barY"
-              },
-              "group": {
-                "default": "stack",
-                "type": "string",
-                "enum": [
-                  "stack",
-                  "dodge"
-                ]
-              },
-              "cornerRadius": {
-                "type": "number"
-              },
-              "label": {
-                "anyOf": [
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "show": {
-                        "default": [
-                          "value"
-                        ],
-                        "type": "array",
-                        "items": {
-                          "type": "string",
-                          "enum": [
-                            "value",
-                            "percent",
-                            "category",
-                            "total"
-                          ]
-                        }
-                      },
-                      "position": {
-                        "default": "outside",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "wide"
+                    },
+                    "fields": {
+                      "type": "array",
+                      "items": {
                         "type": "string",
-                        "enum": [
-                          "auto",
-                          "outside",
-                          "inside"
-                        ]
+                        "minLength": 1
                       },
-                      "format": {
-                        "type": "string"
-                      }
+                      "minItems": 1,
+                      "uniqueItems": true
+                    },
+                    "aggregation": {
+                      "type": "string",
+                      "enum": [
+                        "sum",
+                        "average",
+                        "min",
+                        "max",
+                        "median"
+                      ]
+                    },
+                    "scale": {
+                      "$ref": "#/$defs/LinearScale"
+                    },
+                    "format": {
+                      "type": "string"
                     }
-                  }
-                ]
-              }
-            },
-            "required": [
-              "type"
-            ]
-          },
-          {
-            "type": "object",
-            "properties": {
-              "data": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "propertyNames": {
-                    "type": "string"
                   },
-                  "additionalProperties": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "number"
-                      }
-                    ]
-                  }
+                  "required": [
+                    "type",
+                    "fields"
+                  ],
+                  "additionalProperties": false,
+                  "title": "LinearWideValuesRole"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "count"
+                    },
+                    "series": {
+                      "$ref": "#/$defs/SeriesRole"
+                    },
+                    "scale": {
+                      "$ref": "#/$defs/LinearScale"
+                    },
+                    "format": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ],
+                  "additionalProperties": false,
+                  "title": "LinearCountValuesRole"
+                }
+              ],
+              "title": "LinearValuesRole"
+            },
+            {
+              "$ref": "#/$defs/SeriesLinearValuesRoleWithPercent"
+            }
+          ],
+          "title": "StackedLinearValuesRole"
+        },
+        "curve": {
+          "type": "string",
+          "enum": [
+            "linear",
+            "monotone",
+            "step"
+          ]
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "labels": {
+          "$ref": "#/$defs/AreaLabels"
+        },
+        "line": {
+          "$ref": "#/$defs/PromotedLine"
+        },
+        "arrangement": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "stacked"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "version",
+        "type",
+        "category",
+        "values"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "2026-09-26"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessibilityDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headerAlign": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]{2,3}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-[xX](?:-[A-Za-z0-9]{1,8})+)?$"
+        },
+        "theme": {
+          "$ref": "#/$defs/ThemeName"
+        },
+        "themeOverrides": {
+          "$ref": "#/$defs/ThemeOverrides"
+        },
+        "plotBorder": {
+          "type": "boolean"
+        },
+        "order": {
+          "$ref": "#/$defs/CategoryOrder"
+        },
+        "categoryAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "valueAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "color": {
+          "$ref": "#/$defs/CategoricalColorMapping"
+        },
+        "annotations": {
+          "$ref": "#/$defs/CartesianAnnotations"
+        },
+        "references": {
+          "$ref": "#/$defs/CategoricalReferences"
+        },
+        "type": {
+          "type": "string",
+          "const": "area"
+        },
+        "category": {
+          "$ref": "#/$defs/CategoryRole"
+        },
+        "values": {
+          "$ref": "#/$defs/SeriesLinearValuesRoleWithPercent"
+        },
+        "curve": {
+          "type": "string",
+          "enum": [
+            "linear",
+            "monotone",
+            "step"
+          ]
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "labels": {
+          "$ref": "#/$defs/AreaLabels"
+        },
+        "line": {
+          "$ref": "#/$defs/PromotedLine"
+        },
+        "arrangement": {
+          "$ref": "#/$defs/NormalizedArrangement"
+        }
+      },
+      "required": [
+        "version",
+        "type",
+        "category",
+        "values",
+        "arrangement"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "2026-09-26"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessibilityDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headerAlign": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]{2,3}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-[xX](?:-[A-Za-z0-9]{1,8})+)?$"
+        },
+        "theme": {
+          "$ref": "#/$defs/ThemeName"
+        },
+        "themeOverrides": {
+          "$ref": "#/$defs/ThemeOverrides"
+        },
+        "plotBorder": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string",
+          "const": "scatter"
+        },
+        "id": {
+          "$ref": "#/$defs/FieldRole"
+        },
+        "x": {
+          "$ref": "#/$defs/ScatterRole"
+        },
+        "y": {
+          "$ref": "#/$defs/ScatterRole"
+        },
+        "interval": {
+          "$ref": "#/$defs/ScatterInterval"
+        },
+        "color": {
+          "$ref": "#/$defs/ScatterColor"
+        },
+        "labels": {
+          "$ref": "#/$defs/ScatterLabels"
+        },
+        "xAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "yAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "annotations": {
+          "$ref": "#/$defs/ScatterAnnotations"
+        },
+        "references": {
+          "$ref": "#/$defs/ScatterReferences"
+        },
+        "size": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "string",
+              "minLength": 1
+            },
+            "format": {
+              "type": "string"
+            },
+            "legend": {
+              "$ref": "#/$defs/LegendOptions"
+            }
+          },
+          "required": [
+            "field"
+          ],
+          "additionalProperties": false,
+          "title": "SizeEncoding"
+        },
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "version",
+        "type",
+        "x",
+        "y"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "2026-09-26"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessibilityDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headerAlign": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]{2,3}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-[xX](?:-[A-Za-z0-9]{1,8})+)?$"
+        },
+        "theme": {
+          "$ref": "#/$defs/ThemeName"
+        },
+        "themeOverrides": {
+          "$ref": "#/$defs/ThemeOverrides"
+        },
+        "plotBorder": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string",
+          "const": "scatter"
+        },
+        "id": {
+          "$ref": "#/$defs/FieldRole"
+        },
+        "x": {
+          "$ref": "#/$defs/ScatterRole"
+        },
+        "y": {
+          "$ref": "#/$defs/ScatterRole"
+        },
+        "interval": {
+          "$ref": "#/$defs/ScatterInterval"
+        },
+        "color": {
+          "$ref": "#/$defs/ScatterColor"
+        },
+        "labels": {
+          "$ref": "#/$defs/ScatterLabels"
+        },
+        "xAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "yAxis": {
+          "$ref": "#/$defs/AxisOptions"
+        },
+        "annotations": {
+          "$ref": "#/$defs/ScatterAnnotations"
+        },
+        "references": {
+          "$ref": "#/$defs/ScatterReferences"
+        },
+        "size": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "string",
+              "minLength": 1
+            },
+            "format": {
+              "type": "string"
+            },
+            "legend": {
+              "$ref": "#/$defs/LegendOptions"
+            },
+            "range": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              ],
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "required": [
+            "field",
+            "range"
+          ],
+          "additionalProperties": false,
+          "title": "RangedSizeEncoding"
+        }
+      },
+      "required": [
+        "version",
+        "type",
+        "x",
+        "y",
+        "size"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "2026-09-26"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessibilityDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headerAlign": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]{2,3}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-[xX](?:-[A-Za-z0-9]{1,8})+)?$"
+        },
+        "theme": {
+          "$ref": "#/$defs/ThemeName"
+        },
+        "themeOverrides": {
+          "$ref": "#/$defs/ThemeOverrides"
+        },
+        "type": {
+          "type": "string",
+          "const": "pie"
+        },
+        "category": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "string",
+              "minLength": 1
+            },
+            "format": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "field"
+          ],
+          "additionalProperties": false
+        },
+        "values": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "long"
+                },
+                "field": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "aggregation": {
+                  "type": "string",
+                  "enum": [
+                    "sum",
+                    "average",
+                    "min",
+                    "max",
+                    "median"
+                  ]
+                },
+                "format": {
+                  "type": "string"
+                },
+                "percentFormat": {
+                  "type": "string"
                 }
               },
-              "x": {
-                "default": "x",
-                "type": "string"
+              "required": [
+                "type",
+                "field"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "count"
+                },
+                "format": {
+                  "type": "string"
+                },
+                "percentFormat": {
+                  "type": "string"
+                }
               },
-              "y": {
-                "default": "y",
-                "type": "string"
-              },
-              "fill": {
-                "type": "string"
-              },
-              "stroke": {
-                "type": "string"
-              },
-              "strokeWidth": {
-                "default": 1,
-                "type": "number"
-              },
-              "type": {
-                "type": "string",
-                "const": "barX"
-              },
-              "group": {
-                "default": "stack",
+              "required": [
+                "type"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "order": {
+          "$ref": "#/$defs/CategoryOrder"
+        },
+        "labels": {
+          "type": "object",
+          "properties": {
+            "content": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
                 "type": "string",
                 "enum": [
-                  "stack",
-                  "dodge"
+                  "category",
+                  "value",
+                  "percent"
                 ]
               },
-              "cornerRadius": {
-                "type": "number"
-              },
-              "label": {
-                "anyOf": [
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "show": {
-                        "default": [
-                          "value"
-                        ],
-                        "type": "array",
-                        "items": {
-                          "type": "string",
-                          "enum": [
-                            "value",
-                            "percent",
-                            "category",
-                            "total"
-                          ]
-                        }
-                      },
-                      "position": {
-                        "default": "outside",
-                        "type": "string",
-                        "enum": [
-                          "auto",
-                          "outside",
-                          "inside"
-                        ]
-                      },
-                      "format": {
-                        "type": "string"
-                      }
-                    }
-                  }
-                ]
-              }
+              "uniqueItems": true
             },
-            "required": [
-              "type"
-            ]
+            "position": {
+              "type": "string",
+              "enum": [
+                "auto",
+                "inside",
+                "outside"
+              ]
+            }
           },
-          {
+          "required": [
+            "content"
+          ],
+          "additionalProperties": false
+        },
+        "color": {
+          "$ref": "#/$defs/CategoricalColorMapping"
+        },
+        "innerRadius": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 1
+        },
+        "cornerRadius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "annotations": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
             "type": "object",
             "properties": {
-              "data": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "propertyNames": {
-                    "type": "string"
+              "placement": {
+                "$ref": "#/$defs/AnnotationPlacement"
+              },
+              "style": {
+                "$ref": "#/$defs/AnnotationTextStyle"
+              },
+              "visible": {
+                "type": "boolean"
+              },
+              "boxAnchor": {
+                "$ref": "#/$defs/AnnotationBoxAnchor"
+              },
+              "reserveSpace": {
+                "$ref": "#/$defs/ReserveSpace"
+              },
+              "width": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "exclusiveMinimum": 0
                   },
-                  "additionalProperties": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "number"
-                      }
-                    ]
+                  {
+                    "type": "string",
+                    "const": "shape"
                   }
-                }
+                ]
               },
-              "x": {
-                "default": "x",
-                "type": "string"
-              },
-              "y": {
-                "default": "y",
-                "type": "string"
-              },
-              "fill": {
-                "type": "string"
-              },
-              "stroke": {
-                "type": "string"
-              },
-              "strokeWidth": {
-                "default": 0,
-                "type": "number"
-              },
-              "type": {
-                "type": "string",
-                "const": "areaY"
-              },
-              "curve": {
+              "connector": {
                 "type": "string",
                 "enum": [
-                  "linear",
-                  "monotone",
-                  "step"
+                  "none",
+                  "line",
+                  "arrow"
                 ]
               },
-              "label": {
-                "anyOf": [
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "end": {
-                        "default": [
-                          "category"
-                        ],
-                        "anyOf": [
-                          {
-                            "type": "boolean"
-                          },
-                          {
-                            "type": "array",
-                            "items": {
-                              "type": "string",
-                              "enum": [
-                                "category",
-                                "value",
-                                "percent"
-                              ]
-                            }
-                          }
-                        ]
-                      },
-                      "format": {
-                        "type": "string"
-                      }
-                    }
-                  }
-                ]
-              }
-            },
-            "required": [
-              "type"
-            ]
-          },
-          {
-            "type": "object",
-            "properties": {
-              "data": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "propertyNames": {
-                    "type": "string"
-                  },
-                  "additionalProperties": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "number"
-                      }
-                    ]
-                  }
-                }
+              "offset": {
+                "$ref": "#/$defs/AnnotationOffset"
               },
-              "x": {
-                "default": "x",
-                "type": "string"
-              },
-              "y": {
-                "default": "y",
-                "type": "string"
-              },
-              "fill": {
-                "type": "string"
-              },
-              "stroke": {
-                "type": "string"
-              },
-              "strokeWidth": {
-                "default": 0,
-                "type": "number"
-              },
-              "type": {
-                "type": "string",
-                "const": "areaX"
-              },
-              "curve": {
-                "type": "string",
-                "enum": [
-                  "linear",
-                  "monotone",
-                  "step"
-                ]
-              }
-            },
-            "required": [
-              "type"
-            ]
-          },
-          {
-            "type": "object",
-            "properties": {
-              "data": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "propertyNames": {
-                    "type": "string"
-                  },
-                  "additionalProperties": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "number"
-                      }
-                    ]
-                  }
-                }
-              },
-              "x": {
-                "default": "x",
-                "type": "string"
-              },
-              "y": {
-                "default": "y",
-                "type": "string"
-              },
-              "fill": {
-                "type": "string"
-              },
-              "stroke": {
-                "type": "string"
-              },
-              "strokeWidth": {
-                "default": 1,
-                "type": "number"
-              },
-              "type": {
-                "type": "string",
-                "const": "pie"
-              },
-              "innerRadius": {
-                "default": 0,
-                "type": "number",
-                "minimum": 0,
-                "maximum": 1
-              },
-              "cornerRadius": {
-                "type": "number"
-              },
-              "label": {
-                "anyOf": [
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "show": {
-                        "default": [
-                          "category",
-                          "percent"
-                        ],
-                        "type": "array",
-                        "items": {
-                          "type": "string",
-                          "enum": [
-                            "value",
-                            "percent",
-                            "category"
-                          ]
-                        }
-                      },
-                      "position": {
-                        "default": "auto",
-                        "type": "string",
-                        "enum": [
-                          "auto",
-                          "inside",
-                          "outside"
-                        ]
-                      },
-                      "format": {
-                        "type": "string"
-                      }
-                    }
-                  }
-                ]
-              }
-            },
-            "required": [
-              "type"
-            ]
-          },
-          {
-            "type": "object",
-            "properties": {
-              "data": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "propertyNames": {
-                    "type": "string"
-                  },
-                  "additionalProperties": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "number"
-                      }
-                    ]
-                  }
-                }
-              },
-              "x": {
-                "default": "x",
-                "type": "string"
-              },
-              "y": {
-                "default": "y",
-                "type": "string"
-              },
-              "fill": {
-                "type": "string"
-              },
-              "stroke": {
-                "type": "string"
-              },
-              "strokeWidth": {
-                "default": 1,
-                "type": "number"
-              },
-              "type": {
-                "type": "string",
-                "const": "text"
-              },
-              "text": {
-                "default": "text",
-                "type": "string"
-              },
-              "dx": {
-                "default": 0,
-                "type": "number"
-              },
-              "dy": {
-                "default": 0,
-                "type": "number"
-              },
-              "fontSize": {
-                "type": "number"
-              },
-              "fontWeight": {
-                "type": "string"
-              },
-              "textAnchor": {
-                "default": "center",
+              "align": {
                 "type": "string",
                 "enum": [
                   "start",
                   "center",
                   "end"
                 ]
-              }
-            },
-            "required": [
-              "type"
-            ]
-          },
-          {
-            "type": "object",
-            "properties": {
-              "data": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "propertyNames": {
-                    "type": "string"
+              },
+              "text": {
+                "type": "string"
+              },
+              "anchor": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "datum"
                   },
-                  "additionalProperties": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "number"
-                      }
+                  "category": {
+                    "type": [
+                      "string",
+                      "number"
                     ]
                   }
-                }
-              },
-              "x": {
-                "default": "x",
-                "type": "string"
-              },
-              "y": {
-                "default": "y",
-                "type": "string"
-              },
-              "fill": {
-                "type": "string"
-              },
-              "stroke": {
-                "type": "string"
-              },
-              "strokeWidth": {
-                "default": 1,
-                "type": "number"
-              },
-              "type": {
-                "type": "string",
-                "const": "ruleX"
+                },
+                "required": [
+                  "type",
+                  "category"
+                ],
+                "additionalProperties": false
               }
             },
             "required": [
-              "type"
-            ]
+              "text",
+              "anchor"
+            ],
+            "additionalProperties": false,
+            "title": "PieAnnotation"
           },
-          {
-            "type": "object",
-            "properties": {
-              "data": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "propertyNames": {
-                    "type": "string"
-                  },
-                  "additionalProperties": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "number"
-                      }
-                    ]
-                  }
-                }
-              },
-              "x": {
-                "default": "x",
-                "type": "string"
-              },
-              "y": {
-                "default": "y",
-                "type": "string"
-              },
-              "fill": {
-                "type": "string"
-              },
-              "stroke": {
-                "type": "string"
-              },
-              "strokeWidth": {
-                "default": 1,
-                "type": "number"
-              },
-              "type": {
-                "type": "string",
-                "const": "ruleY"
-              }
-            },
-            "required": [
-              "type"
-            ]
-          }
-        ]
-      }
-    },
-    "x": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "linear",
-            "log",
-            "utc",
-            "band"
-          ]
-        },
-        "domain": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "number"
-                }
-              ],
-              "minItems": 2,
-              "maxItems": 2
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          ]
-        },
-        "nice": {
-          "type": "boolean"
-        },
-        "label": {
-          "type": "string"
-        },
-        "tickFormat": {
-          "type": "string"
-        },
-        "display": {
-          "default": true,
-          "type": "boolean"
+          "title": "PieAnnotations"
         }
-      }
-    },
-    "y": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "linear",
-            "log",
-            "utc",
-            "band"
-          ]
-        },
-        "domain": {
-          "anyOf": [
-            {
-              "type": "array",
-              "items": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "number"
-                }
-              ],
-              "minItems": 2,
-              "maxItems": 2
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          ]
-        },
-        "nice": {
-          "type": "boolean"
-        },
-        "label": {
-          "type": "string"
-        },
-        "tickFormat": {
-          "type": "string"
-        },
-        "display": {
-          "default": true,
-          "type": "boolean"
-        }
-      }
-    },
-    "color": {
-      "anyOf": [
-        {
-          "type": "object",
-          "properties": {
-            "label": {
-              "type": "string"
-            },
-            "type": {
-              "type": "string",
-              "const": "categorical"
-            },
-            "domain": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "range": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          "required": [
-            "type"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "label": {
-              "type": "string"
-            },
-            "type": {
-              "type": "string",
-              "const": "sequential"
-            },
-            "domain": {
-              "type": "array",
-              "items": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "number"
-                }
-              ],
-              "minItems": 2,
-              "maxItems": 2
-            },
-            "range": {
-              "type": "array",
-              "items": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "string"
-                }
-              ],
-              "minItems": 2,
-              "maxItems": 2
-            }
-          },
-          "required": [
-            "type"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "label": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
-        }
-      ]
+      },
+      "required": [
+        "version",
+        "type",
+        "category",
+        "values"
+      ],
+      "additionalProperties": false
     }
-  },
-  "required": [
-    "version",
-    "format",
-    "marks"
   ],
   "$defs": {
-    "googleFontFamily": {
+    "GoogleFontFamily": {
       "type": "string",
       "enum": [
         "ABeeZee",
@@ -3249,6 +4193,2876 @@
         "Zilla Slab",
         "Zilla Slab Highlight"
       ]
+    },
+    "AnnotationOffset": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "title": "AnnotationOffset"
+    },
+    "ReserveSpace": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "boolean"
+            },
+            "y": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "title": "ReserveSpace"
+    },
+    "AnnotationBoxAnchor": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "y": {
+          "type": "string",
+          "enum": [
+            "top",
+            "middle",
+            "bottom"
+          ]
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "additionalProperties": false,
+      "title": "AnnotationBoxAnchor"
+    },
+    "Color": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "light": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "dark": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "light"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "light": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "dark": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "dark"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      ],
+      "title": "Color"
+    },
+    "AnnotationTextStyle": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "$ref": "#/$defs/Color"
+        },
+        "fontSize": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "fontWeight": {
+          "anyOf": [
+            {
+              "type": "number",
+              "const": 100
+            },
+            {
+              "type": "number",
+              "const": 200
+            },
+            {
+              "type": "number",
+              "const": 300
+            },
+            {
+              "type": "number",
+              "const": 400
+            },
+            {
+              "type": "number",
+              "const": 500
+            },
+            {
+              "type": "number",
+              "const": 600
+            },
+            {
+              "type": "number",
+              "const": 700
+            },
+            {
+              "type": "number",
+              "const": 800
+            },
+            {
+              "type": "number",
+              "const": 900
+            }
+          ]
+        },
+        "background": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "title": "AnnotationTextStyle"
+    },
+    "AnnotationPlacement": {
+      "type": "object",
+      "properties": {
+        "side": {
+          "type": "string",
+          "enum": [
+            "above",
+            "right",
+            "below",
+            "left"
+          ]
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "gap": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "side"
+      ],
+      "additionalProperties": false,
+      "title": "AnnotationPlacement"
+    },
+    "Stroke": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "$ref": "#/$defs/Color"
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "title": "Stroke"
+    },
+    "LegendOptions": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "title": "LegendOptions"
+    },
+    "ColorRange": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Color"
+      },
+      "title": "ColorRange"
+    },
+    "CategoricalColorMapping": {
+      "type": "object",
+      "properties": {
+        "domain": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "range": {
+          "$ref": "#/$defs/ColorRange"
+        },
+        "legend": {
+          "$ref": "#/$defs/LegendOptions"
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "title": "CategoricalColorMapping"
+    },
+    "ExplicitCategoryOrder": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "explicit"
+        },
+        "categories": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "type",
+        "categories"
+      ],
+      "additionalProperties": false,
+      "title": "ExplicitCategoryOrder"
+    },
+    "CategoryOrder": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "category",
+                "value"
+              ]
+            },
+            "direction": {
+              "type": "string",
+              "enum": [
+                "ascending",
+                "descending"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "direction"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ExplicitCategoryOrder"
+        }
+      ],
+      "title": "CategoryOrder"
+    },
+    "WeightTypography": {
+      "type": "object",
+      "properties": {
+        "weight": {
+          "anyOf": [
+            {
+              "type": "number",
+              "const": 100
+            },
+            {
+              "type": "number",
+              "const": 200
+            },
+            {
+              "type": "number",
+              "const": 300
+            },
+            {
+              "type": "number",
+              "const": 400
+            },
+            {
+              "type": "number",
+              "const": 500
+            },
+            {
+              "type": "number",
+              "const": 600
+            },
+            {
+              "type": "number",
+              "const": 700
+            },
+            {
+              "type": "number",
+              "const": 800
+            },
+            {
+              "type": "number",
+              "const": 900
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "title": "WeightTypography"
+    },
+    "ThemeDivergingRange": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ],
+          "minItems": 3,
+          "maxItems": 3
+        },
+        {
+          "type": "array",
+          "items": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ],
+          "minItems": 5,
+          "maxItems": 5
+        }
+      ],
+      "title": "ThemeDivergingRange"
+    },
+    "ThemeSequentialRange": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        {
+          "type": "array",
+          "items": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ],
+          "minItems": 3,
+          "maxItems": 3
+        }
+      ],
+      "title": "ThemeSequentialRange"
+    },
+    "ThemeCategoricalPalette": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "title": "ThemeCategoricalPalette"
+    },
+    "ThemeOverrides": {
+      "type": "object",
+      "properties": {
+        "colors": {
+          "type": "object",
+          "properties": {
+            "background": {
+              "$ref": "#/$defs/Color"
+            },
+            "categorical": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ThemeCategoricalPalette"
+                },
+                {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "light": {
+                          "$ref": "#/$defs/ThemeCategoricalPalette"
+                        },
+                        "dark": {
+                          "$ref": "#/$defs/ThemeCategoricalPalette"
+                        }
+                      },
+                      "required": [
+                        "light"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "light": {
+                          "$ref": "#/$defs/ThemeCategoricalPalette"
+                        },
+                        "dark": {
+                          "$ref": "#/$defs/ThemeCategoricalPalette"
+                        }
+                      },
+                      "required": [
+                        "dark"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              ],
+              "title": "ThemeCategoricalColors"
+            },
+            "sequential": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ThemeSequentialRange"
+                },
+                {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "light": {
+                          "$ref": "#/$defs/ThemeSequentialRange"
+                        },
+                        "dark": {
+                          "$ref": "#/$defs/ThemeSequentialRange"
+                        }
+                      },
+                      "required": [
+                        "light"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "light": {
+                          "$ref": "#/$defs/ThemeSequentialRange"
+                        },
+                        "dark": {
+                          "$ref": "#/$defs/ThemeSequentialRange"
+                        }
+                      },
+                      "required": [
+                        "dark"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              ],
+              "title": "ThemeSequentialColors"
+            },
+            "diverging": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ThemeDivergingRange"
+                },
+                {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "light": {
+                          "$ref": "#/$defs/ThemeDivergingRange"
+                        },
+                        "dark": {
+                          "$ref": "#/$defs/ThemeDivergingRange"
+                        }
+                      },
+                      "required": [
+                        "light"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "light": {
+                          "$ref": "#/$defs/ThemeDivergingRange"
+                        },
+                        "dark": {
+                          "$ref": "#/$defs/ThemeDivergingRange"
+                        }
+                      },
+                      "required": [
+                        "dark"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              ],
+              "title": "ThemeDivergingColors"
+            },
+            "title": {
+              "$ref": "#/$defs/Color"
+            },
+            "subtitle": {
+              "$ref": "#/$defs/Color"
+            },
+            "caption": {
+              "type": "object",
+              "properties": {
+                "color": {
+                  "$ref": "#/$defs/Color"
+                },
+                "linkColor": {
+                  "$ref": "#/$defs/Color"
+                }
+              },
+              "additionalProperties": false,
+              "minProperties": 1
+            },
+            "axes": {
+              "type": "object",
+              "properties": {
+                "line": {
+                  "$ref": "#/$defs/Color"
+                },
+                "title": {
+                  "$ref": "#/$defs/Color"
+                },
+                "grid": {
+                  "$ref": "#/$defs/Color"
+                },
+                "tickLabel": {
+                  "$ref": "#/$defs/Color"
+                }
+              },
+              "additionalProperties": false,
+              "minProperties": 1
+            },
+            "label": {
+              "$ref": "#/$defs/Color"
+            }
+          },
+          "additionalProperties": false,
+          "minProperties": 1,
+          "title": "ThemeColorOverrides"
+        },
+        "fonts": {
+          "type": "object",
+          "properties": {
+            "body": {
+              "$ref": "#/$defs/GoogleFontFamily"
+            },
+            "title": {
+              "$ref": "#/$defs/GoogleFontFamily"
+            },
+            "numeric": {
+              "$ref": "#/$defs/GoogleFontFamily"
+            }
+          },
+          "additionalProperties": false,
+          "minProperties": 1,
+          "title": "ThemeFontOverrides"
+        },
+        "typography": {
+          "type": "object",
+          "properties": {
+            "baseSize": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "header": {
+              "type": "object",
+              "properties": {
+                "titleSubtitleGap": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "gap": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "minProperties": 1
+            },
+            "title": {
+              "type": "object",
+              "properties": {
+                "size": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "weight": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "const": 100
+                    },
+                    {
+                      "type": "number",
+                      "const": 200
+                    },
+                    {
+                      "type": "number",
+                      "const": 300
+                    },
+                    {
+                      "type": "number",
+                      "const": 400
+                    },
+                    {
+                      "type": "number",
+                      "const": 500
+                    },
+                    {
+                      "type": "number",
+                      "const": 600
+                    },
+                    {
+                      "type": "number",
+                      "const": 700
+                    },
+                    {
+                      "type": "number",
+                      "const": 800
+                    },
+                    {
+                      "type": "number",
+                      "const": 900
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false,
+              "minProperties": 1
+            },
+            "subtitle": {
+              "type": "object",
+              "properties": {
+                "size": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "minProperties": 1
+            },
+            "caption": {
+              "type": "object",
+              "properties": {
+                "size": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "gap": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "minProperties": 1
+            },
+            "axisTitle": {
+              "$ref": "#/$defs/WeightTypography"
+            },
+            "tickLabel": {
+              "$ref": "#/$defs/WeightTypography"
+            },
+            "label": {
+              "type": "object",
+              "properties": {
+                "size": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "weight": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "const": 100
+                    },
+                    {
+                      "type": "number",
+                      "const": 200
+                    },
+                    {
+                      "type": "number",
+                      "const": 300
+                    },
+                    {
+                      "type": "number",
+                      "const": 400
+                    },
+                    {
+                      "type": "number",
+                      "const": 500
+                    },
+                    {
+                      "type": "number",
+                      "const": 600
+                    },
+                    {
+                      "type": "number",
+                      "const": 700
+                    },
+                    {
+                      "type": "number",
+                      "const": 800
+                    },
+                    {
+                      "type": "number",
+                      "const": 900
+                    }
+                  ]
+                },
+                "mutedWeight": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "const": 100
+                    },
+                    {
+                      "type": "number",
+                      "const": 200
+                    },
+                    {
+                      "type": "number",
+                      "const": 300
+                    },
+                    {
+                      "type": "number",
+                      "const": 400
+                    },
+                    {
+                      "type": "number",
+                      "const": 500
+                    },
+                    {
+                      "type": "number",
+                      "const": 600
+                    },
+                    {
+                      "type": "number",
+                      "const": 700
+                    },
+                    {
+                      "type": "number",
+                      "const": 800
+                    },
+                    {
+                      "type": "number",
+                      "const": 900
+                    }
+                  ]
+                },
+                "mutedOpacity": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "haloWidth": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "minProperties": 1
+            }
+          },
+          "additionalProperties": false,
+          "minProperties": 1,
+          "title": "ThemeTypographyOverrides"
+        },
+        "axes": {
+          "type": "object",
+          "properties": {
+            "lineWidth": {
+              "type": "number",
+              "minimum": 0
+            },
+            "gridLineWidth": {
+              "type": "number",
+              "minimum": 0
+            },
+            "tickSize": {
+              "type": "number",
+              "minimum": 0
+            },
+            "tickPadding": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "minProperties": 1,
+          "title": "ThemeAxisOverrides"
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "title": "ThemeOverrides"
+    },
+    "ThemeName": {
+      "type": "string",
+      "enum": [
+        "editorial",
+        "clean",
+        "noir",
+        "loud",
+        "soft",
+        "technical"
+      ],
+      "title": "ThemeName"
+    },
+    "ReferenceStroke": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "$ref": "#/$defs/Color"
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "style": {
+          "type": "string",
+          "enum": [
+            "solid",
+            "dashed",
+            "dotted"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "title": "ReferenceStroke"
+    },
+    "ReferenceLabel": {
+      "description": "Omit for no label. content is an ordered array of text and/or value, without duplicates. text is required when text is included. Values follow the reference's statistic scope and formatting.",
+      "type": "object",
+      "properties": {
+        "content": {
+          "minItems": 1,
+          "maxItems": 2,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "text",
+              "value"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "position": {
+          "type": "string",
+          "enum": [
+            "before",
+            "after",
+            "outside-start",
+            "outside-end"
+          ]
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        }
+      },
+      "required": [
+        "content"
+      ],
+      "additionalProperties": false,
+      "title": "ReferenceLabel"
+    },
+    "ScatterReferences": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "contributeToDomain": {
+                "description": "Include this reference in automatic continuous-axis domains. Defaults to true. Explicit domains and normalized share bounds take precedence.",
+                "type": "boolean"
+              },
+              "visible": {
+                "type": "boolean"
+              },
+              "reserveSpace": {
+                "$ref": "#/$defs/ReserveSpace"
+              },
+              "layer": {
+                "type": "string",
+                "enum": [
+                  "back",
+                  "front"
+                ]
+              },
+              "label": {
+                "$ref": "#/$defs/ReferenceLabel"
+              },
+              "stroke": {
+                "$ref": "#/$defs/ReferenceStroke"
+              },
+              "type": {
+                "type": "string",
+                "const": "value"
+              },
+              "axis": {
+                "type": "string",
+                "enum": [
+                  "x",
+                  "y"
+                ]
+              },
+              "value": {
+                "type": [
+                  "string",
+                  "number"
+                ]
+              }
+            },
+            "required": [
+              "type",
+              "axis",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "contributeToDomain": {
+                "description": "Include this reference in automatic continuous-axis domains. Defaults to true. Explicit domains and normalized share bounds take precedence.",
+                "type": "boolean"
+              },
+              "visible": {
+                "type": "boolean"
+              },
+              "reserveSpace": {
+                "$ref": "#/$defs/ReserveSpace"
+              },
+              "layer": {
+                "type": "string",
+                "enum": [
+                  "back",
+                  "front"
+                ]
+              },
+              "label": {
+                "$ref": "#/$defs/ReferenceLabel"
+              },
+              "stroke": {
+                "$ref": "#/$defs/ReferenceStroke"
+              },
+              "type": {
+                "type": "string",
+                "const": "statistic"
+              },
+              "axis": {
+                "type": "string",
+                "enum": [
+                  "x",
+                  "y"
+                ]
+              },
+              "statistic": {
+                "type": "object",
+                "properties": {
+                  "operation": {
+                    "type": "string",
+                    "enum": [
+                      "average",
+                      "median",
+                      "min",
+                      "max"
+                    ]
+                  },
+                  "scope": {
+                    "type": "string",
+                    "enum": [
+                      "visible",
+                      "all"
+                    ]
+                  }
+                },
+                "required": [
+                  "operation",
+                  "scope"
+                ],
+                "additionalProperties": false,
+                "title": "ReferenceStatistic"
+              }
+            },
+            "required": [
+              "type",
+              "axis",
+              "statistic"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "title": "ScatterReference"
+      },
+      "title": "ScatterReferences"
+    },
+    "ScatterAnnotations": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "placement": {
+            "$ref": "#/$defs/AnnotationPlacement"
+          },
+          "style": {
+            "$ref": "#/$defs/AnnotationTextStyle"
+          },
+          "visible": {
+            "type": "boolean"
+          },
+          "boxAnchor": {
+            "$ref": "#/$defs/AnnotationBoxAnchor"
+          },
+          "reserveSpace": {
+            "$ref": "#/$defs/ReserveSpace"
+          },
+          "width": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "string",
+                "const": "shape"
+              }
+            ]
+          },
+          "connector": {
+            "type": "string",
+            "enum": [
+              "none",
+              "line",
+              "arrow"
+            ]
+          },
+          "offset": {
+            "$ref": "#/$defs/AnnotationOffset"
+          },
+          "align": {
+            "type": "string",
+            "enum": [
+              "start",
+              "center",
+              "end"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "anchor": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "datum"
+                  },
+                  "id": {
+                    "type": [
+                      "string",
+                      "number"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "coordinate"
+                  },
+                  "x": {
+                    "type": [
+                      "string",
+                      "number"
+                    ]
+                  },
+                  "y": {
+                    "type": [
+                      "string",
+                      "number"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "x",
+                  "y"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "title": "ScatterAnnotationAnchor"
+          }
+        },
+        "required": [
+          "text",
+          "anchor"
+        ],
+        "additionalProperties": false,
+        "title": "ScatterAnnotation"
+      },
+      "title": "ScatterAnnotations"
+    },
+    "AxisOptions": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "line": {
+              "type": "boolean"
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "format": {
+              "type": "string"
+            },
+            "grid": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "title": "AxisOptions"
+    },
+    "ScatterLabels": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "format": {
+          "type": "string"
+        },
+        "position": {
+          "type": "string",
+          "enum": [
+            "above",
+            "side"
+          ]
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "additionalProperties": false,
+      "title": "ScatterLabels"
+    },
+    "ThreeColorRange": {
+      "type": "array",
+      "items": [
+        {
+          "$ref": "#/$defs/Color"
+        },
+        {
+          "$ref": "#/$defs/Color"
+        },
+        {
+          "$ref": "#/$defs/Color"
+        }
+      ],
+      "minItems": 3,
+      "maxItems": 3,
+      "title": "ThreeColorRange"
+    },
+    "ScatterColor": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Color"
+        },
+        {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "categorical"
+                },
+                "field": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "domain": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "string",
+                      "number"
+                    ]
+                  },
+                  "uniqueItems": true
+                },
+                "range": {
+                  "$ref": "#/$defs/ColorRange"
+                },
+                "legend": {
+                  "$ref": "#/$defs/LegendOptions"
+                }
+              },
+              "required": [
+                "type",
+                "field"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "sequential"
+                },
+                "field": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "domain": {
+                  "type": "array",
+                  "items": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ],
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                "range": {
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "items": [
+                        {
+                          "$ref": "#/$defs/Color"
+                        },
+                        {
+                          "$ref": "#/$defs/Color"
+                        }
+                      ],
+                      "minItems": 2,
+                      "maxItems": 2
+                    },
+                    {
+                      "$ref": "#/$defs/ThreeColorRange"
+                    }
+                  ],
+                  "title": "SequentialColorRange"
+                },
+                "format": {
+                  "type": "string"
+                },
+                "legend": {
+                  "$ref": "#/$defs/LegendOptions"
+                }
+              },
+              "required": [
+                "type",
+                "field"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "diverging"
+                },
+                "field": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "domain": {
+                  "type": "array",
+                  "items": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ],
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                "midpoint": {
+                  "type": "number"
+                },
+                "range": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/ThreeColorRange"
+                    },
+                    {
+                      "type": "array",
+                      "items": [
+                        {
+                          "$ref": "#/$defs/Color"
+                        },
+                        {
+                          "$ref": "#/$defs/Color"
+                        },
+                        {
+                          "$ref": "#/$defs/Color"
+                        },
+                        {
+                          "$ref": "#/$defs/Color"
+                        },
+                        {
+                          "$ref": "#/$defs/Color"
+                        }
+                      ],
+                      "minItems": 5,
+                      "maxItems": 5
+                    }
+                  ],
+                  "title": "DivergingColorRange"
+                },
+                "format": {
+                  "type": "string"
+                },
+                "legend": {
+                  "$ref": "#/$defs/LegendOptions"
+                }
+              },
+              "required": [
+                "type",
+                "field",
+                "domain",
+                "midpoint"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      ],
+      "title": "ScatterColor"
+    },
+    "FieldRole": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "additionalProperties": false,
+      "title": "FieldRole"
+    },
+    "ScatterInterval": {
+      "type": "object",
+      "properties": {
+        "axis": {
+          "type": "string",
+          "enum": [
+            "x",
+            "y"
+          ]
+        },
+        "lower": {
+          "$ref": "#/$defs/FieldRole"
+        },
+        "upper": {
+          "$ref": "#/$defs/FieldRole"
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        }
+      },
+      "required": [
+        "axis",
+        "lower",
+        "upper"
+      ],
+      "additionalProperties": false,
+      "title": "ScatterInterval"
+    },
+    "UtcScale": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "utc"
+        },
+        "domain": {
+          "type": "array",
+          "items": [
+            {
+              "type": [
+                "string",
+                "number"
+              ]
+            },
+            {
+              "type": [
+                "string",
+                "number"
+              ]
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "nice": {
+          "type": "boolean"
+        },
+        "reverse": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false,
+      "title": "UtcScale"
+    },
+    "LogScale": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "log"
+        },
+        "domain": {
+          "type": "array",
+          "items": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "nice": {
+          "type": "boolean"
+        },
+        "reverse": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false,
+      "title": "LogScale"
+    },
+    "LinearScale": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "linear"
+        },
+        "domain": {
+          "type": "array",
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "nice": {
+          "type": "boolean"
+        },
+        "reverse": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false,
+      "title": "LinearScale"
+    },
+    "BandScale": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "band"
+        },
+        "domain": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "reverse": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false,
+      "title": "BandScale"
+    },
+    "CategoryScale": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/BandScale"
+        },
+        {
+          "$ref": "#/$defs/LinearScale"
+        },
+        {
+          "$ref": "#/$defs/LogScale"
+        },
+        {
+          "$ref": "#/$defs/UtcScale"
+        }
+      ],
+      "title": "CategoryScale"
+    },
+    "ScatterRole": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scale": {
+          "$ref": "#/$defs/CategoryScale"
+        },
+        "format": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "additionalProperties": false,
+      "title": "ScatterRole"
+    },
+    "NormalizedArrangement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "stacked"
+        },
+        "normalization": {
+          "type": "string",
+          "enum": [
+            "percent"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "normalization"
+      ],
+      "additionalProperties": false,
+      "title": "NormalizedArrangement"
+    },
+    "ConnectedPointLabels": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "at": {
+              "type": "string",
+              "enum": [
+                "extrema",
+                "all",
+                "ends"
+              ]
+            },
+            "content": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "category",
+                  "value"
+                ]
+              },
+              "uniqueItems": true
+            },
+            "position": {
+              "type": "string",
+              "enum": [
+                "above",
+                "side"
+              ]
+            }
+          },
+          "required": [
+            "at",
+            "content"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "at": {
+              "type": "string",
+              "enum": [
+                "extrema",
+                "all",
+                "ends"
+              ]
+            },
+            "field": {
+              "type": "string",
+              "minLength": 1
+            },
+            "format": {
+              "type": "string"
+            },
+            "position": {
+              "type": "string",
+              "enum": [
+                "above",
+                "side"
+              ]
+            }
+          },
+          "required": [
+            "at",
+            "field"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "title": "ConnectedPointLabels"
+    },
+    "LineLabels": {
+      "type": "object",
+      "properties": {
+        "series": {
+          "type": "object",
+          "properties": {
+            "content": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "series",
+                  "value"
+                ]
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "content"
+          ],
+          "additionalProperties": false
+        },
+        "points": {
+          "$ref": "#/$defs/ConnectedPointLabels"
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "title": "LineLabels"
+    },
+    "LineStroke": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "title": "LineStroke"
+    },
+    "PromotedLine": {
+      "type": "object",
+      "properties": {
+        "series": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "curve": {
+          "type": "string",
+          "enum": [
+            "linear",
+            "monotone",
+            "step"
+          ]
+        },
+        "stroke": {
+          "$ref": "#/$defs/LineStroke"
+        },
+        "points": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "radius": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "fill": {
+                  "$ref": "#/$defs/Color"
+                },
+                "stroke": {
+                  "$ref": "#/$defs/Stroke"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "labels": {
+          "$ref": "#/$defs/LineLabels"
+        }
+      },
+      "required": [
+        "series"
+      ],
+      "additionalProperties": false,
+      "title": "PromotedLine"
+    },
+    "AreaLabels": {
+      "type": "object",
+      "properties": {
+        "series": {
+          "type": "object",
+          "properties": {
+            "content": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "series",
+                  "value",
+                  "percent"
+                ]
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "content"
+          ],
+          "additionalProperties": false
+        },
+        "points": {
+          "$ref": "#/$defs/ConnectedPointLabels"
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "title": "AreaLabels"
+    },
+    "SeriesRole": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "domain": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "format": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "additionalProperties": false,
+      "title": "SeriesRole"
+    },
+    "SeriesLinearValuesRoleWithPercent": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "long"
+            },
+            "field": {
+              "type": "string",
+              "minLength": 1
+            },
+            "series": {
+              "$ref": "#/$defs/SeriesRole"
+            },
+            "aggregation": {
+              "type": "string",
+              "enum": [
+                "sum",
+                "average",
+                "min",
+                "max",
+                "median"
+              ]
+            },
+            "scale": {
+              "$ref": "#/$defs/LinearScale"
+            },
+            "format": {
+              "type": "string"
+            },
+            "percentFormat": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "field",
+            "series"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "wide"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 2,
+              "uniqueItems": true
+            },
+            "aggregation": {
+              "type": "string",
+              "enum": [
+                "sum",
+                "average",
+                "min",
+                "max",
+                "median"
+              ]
+            },
+            "scale": {
+              "$ref": "#/$defs/LinearScale"
+            },
+            "format": {
+              "type": "string"
+            },
+            "percentFormat": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "count"
+            },
+            "series": {
+              "$ref": "#/$defs/SeriesRole"
+            },
+            "scale": {
+              "$ref": "#/$defs/LinearScale"
+            },
+            "format": {
+              "type": "string"
+            },
+            "percentFormat": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "series"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "title": "SeriesLinearValuesRoleWithPercent"
+    },
+    "CategoryRole": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scale": {
+          "$ref": "#/$defs/CategoryScale"
+        },
+        "format": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "additionalProperties": false,
+      "title": "CategoryRole"
+    },
+    "CategoricalReferences": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "contributeToDomain": {
+                "description": "Include this reference in automatic continuous-axis domains. Defaults to true. Explicit domains and normalized share bounds take precedence.",
+                "type": "boolean"
+              },
+              "visible": {
+                "type": "boolean"
+              },
+              "reserveSpace": {
+                "$ref": "#/$defs/ReserveSpace"
+              },
+              "layer": {
+                "type": "string",
+                "enum": [
+                  "back",
+                  "front"
+                ]
+              },
+              "label": {
+                "$ref": "#/$defs/ReferenceLabel"
+              },
+              "stroke": {
+                "$ref": "#/$defs/ReferenceStroke"
+              },
+              "type": {
+                "type": "string",
+                "const": "value"
+              },
+              "axis": {
+                "type": "string",
+                "const": "category"
+              },
+              "value": {
+                "type": [
+                  "string",
+                  "number"
+                ]
+              }
+            },
+            "required": [
+              "type",
+              "axis",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "contributeToDomain": {
+                "description": "Include this reference in automatic continuous-axis domains. Defaults to true. Explicit domains and normalized share bounds take precedence.",
+                "type": "boolean"
+              },
+              "visible": {
+                "type": "boolean"
+              },
+              "reserveSpace": {
+                "$ref": "#/$defs/ReserveSpace"
+              },
+              "layer": {
+                "type": "string",
+                "enum": [
+                  "back",
+                  "front"
+                ]
+              },
+              "label": {
+                "$ref": "#/$defs/ReferenceLabel"
+              },
+              "stroke": {
+                "$ref": "#/$defs/ReferenceStroke"
+              },
+              "type": {
+                "type": "string",
+                "const": "value"
+              },
+              "axis": {
+                "type": "string",
+                "const": "value"
+              },
+              "value": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "type",
+              "axis",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "contributeToDomain": {
+                "description": "Include this reference in automatic continuous-axis domains. Defaults to true. Explicit domains and normalized share bounds take precedence.",
+                "type": "boolean"
+              },
+              "visible": {
+                "type": "boolean"
+              },
+              "reserveSpace": {
+                "$ref": "#/$defs/ReserveSpace"
+              },
+              "layer": {
+                "type": "string",
+                "enum": [
+                  "back",
+                  "front"
+                ]
+              },
+              "label": {
+                "$ref": "#/$defs/ReferenceLabel"
+              },
+              "stroke": {
+                "$ref": "#/$defs/ReferenceStroke"
+              },
+              "type": {
+                "type": "string",
+                "const": "statistic"
+              },
+              "axis": {
+                "type": "string",
+                "const": "value"
+              },
+              "statistic": {
+                "type": "object",
+                "properties": {
+                  "operation": {
+                    "type": "string",
+                    "enum": [
+                      "average",
+                      "median",
+                      "min",
+                      "max"
+                    ]
+                  },
+                  "scope": {
+                    "type": "string",
+                    "enum": [
+                      "visible",
+                      "all"
+                    ]
+                  },
+                  "basis": {
+                    "type": "string",
+                    "enum": [
+                      "values",
+                      "categoryTotals"
+                    ]
+                  },
+                  "series": {
+                    "type": [
+                      "string",
+                      "number"
+                    ]
+                  }
+                },
+                "required": [
+                  "operation",
+                  "scope"
+                ],
+                "additionalProperties": false,
+                "title": "CategoricalReferenceStatistic"
+              }
+            },
+            "required": [
+              "type",
+              "axis",
+              "statistic"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "title": "CategoricalReference"
+      },
+      "title": "CategoricalReferences"
+    },
+    "CartesianAnnotations": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "placement": {
+            "$ref": "#/$defs/AnnotationPlacement"
+          },
+          "style": {
+            "$ref": "#/$defs/AnnotationTextStyle"
+          },
+          "visible": {
+            "type": "boolean"
+          },
+          "boxAnchor": {
+            "$ref": "#/$defs/AnnotationBoxAnchor"
+          },
+          "reserveSpace": {
+            "$ref": "#/$defs/ReserveSpace"
+          },
+          "width": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "string",
+                "const": "shape"
+              }
+            ]
+          },
+          "connector": {
+            "type": "string",
+            "enum": [
+              "none",
+              "line",
+              "arrow"
+            ]
+          },
+          "offset": {
+            "$ref": "#/$defs/AnnotationOffset"
+          },
+          "align": {
+            "type": "string",
+            "enum": [
+              "start",
+              "center",
+              "end"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "anchor": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "category"
+                  },
+                  "category": {
+                    "type": [
+                      "string",
+                      "number"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "category"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "datum"
+                  },
+                  "category": {
+                    "type": [
+                      "string",
+                      "number"
+                    ]
+                  },
+                  "series": {
+                    "type": [
+                      "string",
+                      "number"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "category"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "coordinate"
+                  },
+                  "category": {
+                    "type": [
+                      "string",
+                      "number"
+                    ]
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "type",
+                  "category",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "title": "CartesianAnnotationAnchor"
+          }
+        },
+        "required": [
+          "text",
+          "anchor"
+        ],
+        "additionalProperties": false,
+        "title": "CartesianAnnotation"
+      },
+      "title": "CartesianAnnotations"
+    },
+    "CategoricalColor": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Color"
+        },
+        {
+          "$ref": "#/$defs/CategoricalColorMapping"
+        }
+      ],
+      "title": "CategoricalColor"
+    },
+    "ContinuousScale": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/LinearScale"
+        },
+        {
+          "$ref": "#/$defs/LogScale"
+        },
+        {
+          "$ref": "#/$defs/UtcScale"
+        }
+      ],
+      "title": "ContinuousScale"
+    },
+    "StackedBarLabels": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "value",
+              "percent",
+              "category",
+              "series"
+            ]
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "content"
+      ],
+      "additionalProperties": false,
+      "title": "StackedBarLabels"
+    },
+    "CategorySpacing": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 1
+        }
+      },
+      "required": [
+        "category"
+      ],
+      "additionalProperties": false,
+      "title": "CategorySpacing"
+    },
+    "BarCategoryRole": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scale": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/BandScale"
+            },
+            {
+              "$ref": "#/$defs/UtcScale"
+            }
+          ],
+          "title": "BarCategoryScale"
+        },
+        "format": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "additionalProperties": false,
+      "title": "BarCategoryRole"
+    },
+    "PositionableBarLabels": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "value",
+              "percent",
+              "category",
+              "series"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "position": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "outside",
+            "inside"
+          ]
+        }
+      },
+      "required": [
+        "content"
+      ],
+      "additionalProperties": false,
+      "title": "PositionableBarLabels"
+    },
+    "BarSpacingPreference": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 1
+        },
+        "series": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 1
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "title": "BarSpacingPreference"
+    },
+    "GroupedArrangement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "grouped"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false,
+      "title": "GroupedArrangement"
+    },
+    "SeriesLinearValuesRole": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "long"
+            },
+            "field": {
+              "type": "string",
+              "minLength": 1
+            },
+            "series": {
+              "$ref": "#/$defs/SeriesRole"
+            },
+            "aggregation": {
+              "type": "string",
+              "enum": [
+                "sum",
+                "average",
+                "min",
+                "max",
+                "median"
+              ]
+            },
+            "scale": {
+              "$ref": "#/$defs/LinearScale"
+            },
+            "format": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "field",
+            "series"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "wide"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 2,
+              "uniqueItems": true
+            },
+            "aggregation": {
+              "type": "string",
+              "enum": [
+                "sum",
+                "average",
+                "min",
+                "max",
+                "median"
+              ]
+            },
+            "scale": {
+              "$ref": "#/$defs/LinearScale"
+            },
+            "format": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "count"
+            },
+            "series": {
+              "$ref": "#/$defs/SeriesRole"
+            },
+            "scale": {
+              "$ref": "#/$defs/LinearScale"
+            },
+            "format": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "series"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "title": "SeriesLinearValuesRole"
+    },
+    "StackedArrangement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "stacked"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false,
+      "title": "StackedArrangement"
+    },
+    "RangeCategoryOrder": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "category"
+            },
+            "direction": {
+              "type": "string",
+              "enum": [
+                "ascending",
+                "descending"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "direction"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/ExplicitCategoryOrder"
+        }
+      ],
+      "title": "RangeCategoryOrder"
+    },
+    "RangeValuesRole": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "range"
+        },
+        "start": {
+          "$ref": "#/$defs/FieldRole"
+        },
+        "end": {
+          "$ref": "#/$defs/FieldRole"
+        },
+        "scale": {
+          "$ref": "#/$defs/ContinuousScale"
+        },
+        "format": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "start",
+        "end"
+      ],
+      "additionalProperties": false,
+      "title": "RangeValuesRole"
+    },
+    "RangeCategoryRole": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scale": {
+          "$ref": "#/$defs/BandScale"
+        },
+        "format": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "additionalProperties": false,
+      "title": "RangeCategoryRole"
+    },
+    "SimpleBarValuesRole": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "long"
+            },
+            "field": {
+              "type": "string",
+              "minLength": 1
+            },
+            "aggregation": {
+              "type": "string",
+              "enum": [
+                "sum",
+                "average",
+                "min",
+                "max",
+                "median"
+              ]
+            },
+            "scale": {
+              "$ref": "#/$defs/LinearScale"
+            },
+            "format": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "field"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "wide"
+            },
+            "fields": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                }
+              ],
+              "minItems": 1,
+              "maxItems": 1,
+              "uniqueItems": true
+            },
+            "aggregation": {
+              "type": "string",
+              "enum": [
+                "sum",
+                "average",
+                "min",
+                "max",
+                "median"
+              ]
+            },
+            "scale": {
+              "$ref": "#/$defs/LinearScale"
+            },
+            "format": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "count"
+            },
+            "scale": {
+              "$ref": "#/$defs/LinearScale"
+            },
+            "format": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "title": "SimpleBarValuesRole"
     }
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "@szum-io/sdk",
   "version": "3.2.0",
-  "description": "Render charts from a JSON config – SVG or PNG, embeddable in emails, PDFs, Slack, or any <img> tag. Official TypeScript SDK for Szum.",
+  "description": "Render charts from a JSON document – SVG or PNG, embeddable in emails, PDFs, Slack, or any <img> tag. Official TypeScript SDK for Szum.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -21,7 +21,9 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md",
+    "assets/hero.png"
   ],
   "publishConfig": {
     "access": "public"
@@ -56,7 +58,7 @@
     "szum"
   ],
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "browser": false,
   "scripts": {
@@ -65,16 +67,17 @@
     "test": "vitest run --exclude src/client.test.ts",
     "test:integration": "vitest run src/client.test.ts",
     "knip": "knip",
+    "check": "node scripts/check-version.mjs && pnpm test && pnpm typecheck && pnpm knip",
     "version": "node scripts/sync-version.mjs && git add src/version.ts",
-    "prepublishOnly": "node scripts/check-version.mjs && pnpm test && pnpm typecheck && pnpm build",
+    "prepack": "pnpm check && pnpm build",
     "postpublish": "git push && git push --tags"
   },
   "devDependencies": {
-    "@types/node": "^25.6.0",
+    "@types/node": "^24.0.0",
     "knip": "^6.4.1",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
     "vitest": "^4.1.4"
   },
-  "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319"
+  "packageManager": "pnpm@12.5.1+sha512.e3f305bc784a2bc89f5ad3b6138889470fae8d2af5f36b61216ec91c2c3d64089775f9de38aac331044ea40f245cb0d5666392dfdf65824e1907ef6a2c62de5f"
 }

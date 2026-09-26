@@ -1,37 +1,22 @@
 import { SzumCharts } from "./charts";
+import type { ChartDocument, RequestOptions } from "./contracts";
 import type { RenderMetadata, RenderUsage } from "./generated/render";
-import type { ChartConfigInput } from "./generated/types";
 import { SzumAPIError } from "./errors";
+import { parseChartDiagnostics } from "./diagnostics";
 import { fetchWithRetry, parseRequestId, USER_AGENT } from "./http";
 import {
   assertTransportOptions,
-  DEFAULT_BASE_URL,
   DEFAULT_MAX_RETRIES,
   DEFAULT_TIMEOUT,
-  resolveConfig,
+  resolveDocument,
+  resolveBaseUrl,
 } from "./options";
-
-export type ChartConfig = Omit<ChartConfigInput, "version"> & {
-  version?: ChartConfigInput["version"];
-};
 
 export type SzumOptions = {
   apiKey: string;
   baseUrl?: string;
   timeout?: number;
   maxRetries?: number;
-};
-
-export type RequestOptions = {
-  timeout?: number;
-  signal?: AbortSignal;
-  /**
-   * Idempotency key for retry-safe creates. `charts.create` auto-generates one
-   * per call (reused across that call's retries) so a committed-but-timed-out
-   * create can't duplicate the chart. Pass your own to dedupe across processes.
-   * Ignored by endpoints that aren't `POST /api/charts`.
-   */
-  idempotencyKey?: string;
 };
 
 export type RenderResult = RenderMetadata & {
@@ -59,49 +44,50 @@ export class Szum {
     assertTransportOptions({ timeout, maxRetries });
 
     this.apiKey = apiKey;
-    this.baseUrl = baseUrl ?? DEFAULT_BASE_URL;
+    this.baseUrl = resolveBaseUrl(baseUrl);
     this.timeout = timeout ?? DEFAULT_TIMEOUT;
     this.maxRetries = maxRetries ?? DEFAULT_MAX_RETRIES;
 
     this.charts = new SzumCharts({
       request: (path, init, opts) => this.request(path, init, opts),
-      resolveConfig,
+      resolveDocument,
     });
   }
 
   async render(
-    config: ChartConfig,
+    request: ChartDocument,
     options?: RequestOptions,
   ): Promise<Uint8Array> {
-    const response = await this.renderResponse(config, options);
+    const response = await this.renderResponse(request, options);
 
     return new Uint8Array(await response.arrayBuffer());
   }
 
   async renderWithMetadata(
-    config: ChartConfig,
+    request: ChartDocument,
     options?: RequestOptions,
   ): Promise<RenderResult> {
-    const response = await this.renderResponse(config, options);
+    const response = await this.renderResponse(request, options);
     const buffer = await response.arrayBuffer();
 
     return {
       data: new Uint8Array(buffer),
       contentType: requireHeader(response, "content-type"),
       fontFallback: parseOptionalTrueHeader(response, "x-font-fallback"),
+      diagnostics: parseRenderDiagnostics(response),
       usage: parseRenderUsage(response),
     };
   }
 
   private async renderResponse(
-    config: ChartConfig,
+    request: ChartDocument,
     options?: RequestOptions,
   ): Promise<Response> {
     return this.request(
       "/chart",
       {
         method: "POST",
-        body: JSON.stringify(resolveConfig(config)),
+        body: JSON.stringify(resolveDocument(request)),
       },
       options,
       "rate-limit-only",
@@ -140,6 +126,24 @@ export class Szum {
     return headers;
   }
 }
+
+const parseRenderDiagnostics = (response: Response) => {
+  const name = "x-chart-diagnostics";
+  const header = requireHeader(response, name);
+  let diagnostics;
+
+  try {
+    diagnostics = parseChartDiagnostics(JSON.parse(decodeURIComponent(header)));
+  } catch {
+    throw invalidResponseHeader(response, name);
+  }
+
+  if (diagnostics === null) {
+    throw invalidResponseHeader(response, name);
+  }
+
+  return diagnostics;
+};
 
 const parseRenderUsage = (response: Response): RenderUsage => ({
   used: parseUsageHeader(response, "x-usage-used"),

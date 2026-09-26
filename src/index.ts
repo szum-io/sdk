@@ -2,10 +2,9 @@ export { type SavedChartCreateOptions } from "./charts";
 export {
   type RequestOptions,
   type ChartConfig,
-  type RenderResult,
-  Szum,
-  type SzumOptions,
-} from "./client";
+  type ChartDocument,
+} from "./contracts";
+export { type RenderResult, Szum, type SzumOptions } from "./client";
 export {
   SzumAPIError,
   SzumAuthenticationError,
@@ -16,18 +15,20 @@ export {
   SzumRateLimitError,
 } from "./errors";
 export type { RenderMetadata, RenderUsage } from "./generated/render";
+export type { ApiFailure, ApiError } from "./generated/failure";
 export type {
-  ConfigMissingReason,
+  DocumentMissingReason,
   SavedChart,
-  SavedChartConfigs,
+  SavedChartDocuments,
   SavedChartCreateParams,
-  SavedChartDocument,
+  SavedChartDocumentState,
   SavedChartListItem,
   SavedChartListParams,
   SavedChartPage,
   SavedChartSort,
   SavedChartSource,
 } from "./generated/saved-charts";
+export type { ChartDocumentInput } from "./generated/document";
 export type { ChartConfigInput } from "./generated/types";
 export type {
   ChartDiagnostic,

@@ -1,4 +1,5 @@
 import type { ChartDiagnostic } from "./generated/validation";
+import type { ApiFailure } from "./generated/failure";
 
 type SzumErrorParams = {
   message: string;
@@ -6,7 +7,8 @@ type SzumErrorParams = {
   retryAfter?: number | null;
   requestId?: string | null;
   code?: string;
-  issues?: ChartDiagnostic[] | null;
+  diagnostics?: ChartDiagnostic[] | null;
+  failure?: ApiFailure | null;
 };
 
 type SzumSubclassParams = Omit<SzumErrorParams, "code">;
@@ -16,7 +18,9 @@ export class SzumError extends Error {
   readonly status: number;
   readonly retryAfter: number | null;
   readonly requestId: string | null;
-  readonly issues: ChartDiagnostic[] | null;
+  readonly diagnostics: ChartDiagnostic[] | null;
+  readonly failure: ApiFailure | null;
+  readonly retryable: boolean | null;
 
   constructor({
     message,
@@ -24,15 +28,18 @@ export class SzumError extends Error {
     retryAfter,
     requestId,
     code,
-    issues,
+    diagnostics,
+    failure,
   }: SzumErrorParams) {
     super(message);
     this.name = "SzumError";
-    this.code = code ?? "unknown_error";
+    this.code = failure?.error.code ?? code ?? "unknown_error";
     this.status = status;
     this.retryAfter = retryAfter ?? null;
     this.requestId = requestId ?? null;
-    this.issues = issues ?? null;
+    this.failure = failure ?? null;
+    this.diagnostics = failure?.diagnostics ?? diagnostics ?? null;
+    this.retryable = failure?.error.retryable ?? null;
   }
 
   toJSON() {
@@ -43,7 +50,9 @@ export class SzumError extends Error {
       status: this.status,
       retryAfter: this.retryAfter,
       requestId: this.requestId,
-      issues: this.issues,
+      diagnostics: this.diagnostics,
+      retryable: this.retryable,
+      failure: this.failure,
     };
   }
 }
