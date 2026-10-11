@@ -30,6 +30,64 @@ const validation = {
 };
 const fetchMock = vi.fn<typeof fetch>();
 
+const waterfallDocument = {
+  version: SCHEMA_VERSION,
+  config: {
+    version: SCHEMA_VERSION,
+    type: "waterfall" as const,
+    category: { field: "step" },
+    values: { type: "long" as const, field: "amount" },
+    stepKind: { field: "kind" },
+    focus: "changes" as const,
+    connectors: true,
+    labels: { content: ["value"], position: "outside" as const },
+  },
+  data: [
+    { step: "Opening", kind: "start", amount: 100 },
+    { step: "Growth", kind: "change", amount: 20 },
+    { step: "Closing", kind: "total", amount: null },
+  ],
+} satisfies ChartDocumentInput;
+
+describe("waterfall document contract", () => {
+  it("accepts the additive family on the current contract version", () => {
+    expect(isChartDocument(waterfallDocument)).toBe(true);
+    expect(isChartDocument(document)).toBe(true);
+  });
+});
+
+describe("currency document contract", () => {
+  it.each([
+    ["column", document],
+    ["waterfall", waterfallDocument],
+  ] as const)("accepts an ISO 4217 code on %s values", (_type, source) => {
+    expect(
+      isChartDocument({
+        ...source,
+        config: {
+          ...source.config,
+          values: { ...source.config.values, currency: "USD" },
+        },
+      }),
+    ).toBe(true);
+  });
+
+  it.each(["US", "USDX", "US$", ""])(
+    "rejects currency %j that is not a three-letter code",
+    (currency) => {
+      expect(
+        isChartDocument({
+          ...document,
+          config: {
+            ...document.config,
+            values: { ...document.config.values, currency },
+          },
+        }),
+      ).toBe(false);
+    },
+  );
+});
+
 beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
   vi.useFakeTimers();
@@ -123,6 +181,13 @@ describe("complete request lifetime", () => {
           affectedCount: 2,
           labelRoles: ["value"],
         },
+      },
+      {
+        code: "invalid_preference",
+        severity: "warning",
+        path: "/config/valueAxis/format",
+        message: "Only the zero value-axis tick fits.",
+        details: { reason: "axis_tick_labels_reduced" },
       },
     ];
     fetchMock.mockResolvedValue(

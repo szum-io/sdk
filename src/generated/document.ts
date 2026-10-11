@@ -2059,34 +2059,8 @@ export type CartesianAnnotationAnchor =
  */
 export type CategoricalReferences = [CategoricalReference, ...CategoricalReference[]];
 export type CategoricalReference =
-  | {
-      /**
-       * Include this reference in automatic continuous-axis domains. Defaults to true. Explicit domains and normalized share bounds take precedence.
-       */
-      contributeToDomain?: boolean;
-      visible?: boolean;
-      reserveSpace?: ReserveSpace;
-      layer?: "back" | "front";
-      label?: ReferenceLabel;
-      stroke?: ReferenceStroke;
-      type: "value";
-      axis: "category";
-      value: string | number;
-    }
-  | {
-      /**
-       * Include this reference in automatic continuous-axis domains. Defaults to true. Explicit domains and normalized share bounds take precedence.
-       */
-      contributeToDomain?: boolean;
-      visible?: boolean;
-      reserveSpace?: ReserveSpace;
-      layer?: "back" | "front";
-      label?: ReferenceLabel;
-      stroke?: ReferenceStroke;
-      type: "value";
-      axis: "value";
-      value: number;
-    }
+  | CategoricalCategoryValueReference
+  | CategoricalNumericValueReference
   | {
       /**
        * Include this reference in automatic continuous-axis domains. Defaults to true. Explicit domains and normalized share bounds take precedence.
@@ -2124,6 +2098,7 @@ export type SimpleBarValuesRole =
       aggregation?: "sum" | "average" | "min" | "max" | "median";
       scale?: LinearScale;
       format?: string;
+      currency?: CurrencyCode;
     }
   | {
       type: "wide";
@@ -2135,12 +2110,14 @@ export type SimpleBarValuesRole =
       aggregation?: "sum" | "average" | "min" | "max" | "median";
       scale?: LinearScale;
       format?: string;
+      currency?: CurrencyCode;
     }
   | {
       type: "count";
       scale?: LinearScale;
       format?: string;
     };
+export type CurrencyCode = string;
 export type ContinuousScale = LinearScale | LogScale | UtcScale;
 export type RangeCategoryOrder =
   | {
@@ -2156,6 +2133,7 @@ export type SeriesLinearValuesRoleWithPercent =
       aggregation?: "sum" | "average" | "min" | "max" | "median";
       scale?: LinearScale;
       format?: string;
+      currency?: CurrencyCode;
       percentFormat?: string;
     }
   | {
@@ -2167,6 +2145,7 @@ export type SeriesLinearValuesRoleWithPercent =
       aggregation?: "sum" | "average" | "min" | "max" | "median";
       scale?: LinearScale;
       format?: string;
+      currency?: CurrencyCode;
       percentFormat?: string;
     }
   | {
@@ -2184,6 +2163,7 @@ export type SeriesLinearValuesRole =
       aggregation?: "sum" | "average" | "min" | "max" | "median";
       scale?: LinearScale;
       format?: string;
+      currency?: CurrencyCode;
     }
   | {
       type: "wide";
@@ -2194,6 +2174,7 @@ export type SeriesLinearValuesRole =
       aggregation?: "sum" | "average" | "min" | "max" | "median";
       scale?: LinearScale;
       format?: string;
+      currency?: CurrencyCode;
     }
   | {
       type: "count";
@@ -2299,10 +2280,32 @@ export type ScatterReference =
       axis: "x" | "y";
       statistic: ReferenceStatistic;
     };
+export type PieStroke = false | Stroke;
 /**
  * @minItems 1
  */
 export type PieAnnotations = [PieAnnotation, ...PieAnnotation[]];
+export type WaterfallLabels =
+  | false
+  | {
+      /**
+       * @minItems 1
+       * @maxItems 1
+       */
+      content: ["value"];
+      position?: "auto" | "outside" | "inside";
+    };
+/**
+ * @minItems 1
+ */
+export type WaterfallAnnotations = [CartesianAnnotation, ...CartesianAnnotation[]];
+/**
+ * @minItems 1
+ */
+export type WaterfallReferences = [
+  CategoricalCategoryValueReference | CategoricalNumericValueReference,
+  ...(CategoricalCategoryValueReference | CategoricalNumericValueReference)[]
+];
 
 export interface ChartDocumentInput {
   version: "2026-09-26";
@@ -2780,6 +2783,7 @@ export interface ChartDocumentInput {
               field: string;
               aggregation?: "sum" | "average" | "min" | "max" | "median";
               format?: string;
+              currency?: CurrencyCode;
               percentFormat?: string;
             }
           | {
@@ -2793,13 +2797,37 @@ export interface ChartDocumentInput {
            * @minItems 1
            */
           content: ["category" | "value" | "percent", ...("category" | "value" | "percent")[]];
-          position?: "auto" | "inside" | "outside";
+          position?: "auto" | "outside" | "inside";
         };
         color?: CategoricalColorMapping;
         innerRadius?: number;
         cornerRadius?: number;
-        stroke?: Stroke;
+        stroke?: PieStroke;
         annotations?: PieAnnotations;
+      }
+    | {
+        version: "2026-09-26";
+        title?: string;
+        subtitle?: string;
+        accessibilityDescription?: string;
+        caption?: string;
+        headerAlign?: "start" | "center" | "end";
+        locale?: string;
+        theme?: ThemeName;
+        themeOverrides?: ThemeOverrides;
+        type: "waterfall";
+        plotBorder?: boolean;
+        category: WaterfallCategoryRole;
+        values: WaterfallValuesRole;
+        stepKind: FieldRole;
+        focus?: "changes";
+        connectors?: boolean;
+        labels?: WaterfallLabels;
+        color?: WaterfallColor;
+        categoryAxis?: AxisOptions;
+        valueAxis?: AxisOptions;
+        annotations?: WaterfallAnnotations;
+        references?: WaterfallReferences;
       };
   data: {
     [k: string]: string | number | null;
@@ -2948,6 +2976,20 @@ export interface AnnotationOffset {
   x?: number;
   y?: number;
 }
+export interface CategoricalCategoryValueReference {
+  /**
+   * Include this reference in automatic continuous-axis domains. Defaults to true. Explicit domains and normalized share bounds take precedence.
+   */
+  contributeToDomain?: boolean;
+  visible?: boolean;
+  reserveSpace?: ReserveSpace;
+  layer?: "back" | "front";
+  label?: ReferenceLabel;
+  stroke?: ReferenceStroke;
+  type: "value";
+  axis: "category";
+  value: string | number;
+}
 /**
  * Omit for no label. content is an ordered array of text and/or value, without duplicates. text is required when text is included. Values follow the reference's statistic scope and formatting.
  */
@@ -2966,6 +3008,20 @@ export interface ReferenceStroke {
   color?: Color;
   width?: number;
   style?: "solid" | "dashed" | "dotted";
+}
+export interface CategoricalNumericValueReference {
+  /**
+   * Include this reference in automatic continuous-axis domains. Defaults to true. Explicit domains and normalized share bounds take precedence.
+   */
+  contributeToDomain?: boolean;
+  visible?: boolean;
+  reserveSpace?: ReserveSpace;
+  layer?: "back" | "front";
+  label?: ReferenceLabel;
+  stroke?: ReferenceStroke;
+  type: "value";
+  axis: "value";
+  value: number;
 }
 export interface CategoricalReferenceStatistic {
   operation: "average" | "median" | "min" | "max";
@@ -3113,6 +3169,7 @@ export interface LineLongValuesRole {
   aggregation?: "sum" | "average" | "min" | "max" | "median";
   scale?: ContinuousScale;
   format?: string;
+  currency?: CurrencyCode;
 }
 export interface LineWideValuesRole {
   type: "wide";
@@ -3123,6 +3180,7 @@ export interface LineWideValuesRole {
   aggregation?: "sum" | "average" | "min" | "max" | "median";
   scale?: ContinuousScale;
   format?: string;
+  currency?: CurrencyCode;
 }
 export interface CountValuesRole {
   type: "count";
@@ -3137,6 +3195,7 @@ export interface LinearLongValuesRole {
   aggregation?: "sum" | "average" | "min" | "max" | "median";
   scale?: LinearScale;
   format?: string;
+  currency?: CurrencyCode;
 }
 export interface LinearWideValuesRole {
   type: "wide";
@@ -3147,6 +3206,7 @@ export interface LinearWideValuesRole {
   aggregation?: "sum" | "average" | "min" | "max" | "median";
   scale?: LinearScale;
   format?: string;
+  currency?: CurrencyCode;
 }
 export interface LinearCountValuesRole {
   type: "count";
@@ -3226,6 +3286,22 @@ export interface PieAnnotation {
     type: "datum";
     category: string | number;
   };
+}
+export interface WaterfallCategoryRole {
+  field: string;
+  format?: string;
+}
+export interface WaterfallValuesRole {
+  type: "long";
+  field: string;
+  scale?: LinearScale;
+  format?: string;
+  currency?: CurrencyCode;
+}
+export interface WaterfallColor {
+  increase?: Color;
+  decrease?: Color;
+  total?: Color;
 }
 export interface Margin {
   top?: number;

@@ -6,7 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- Generated types and strict document guards now accept `waterfall` on the existing `2026-09-26` chart contract, including `focus: "changes"` and optional `labels.position`. Existing chart documents retain their version and meaning.
+- Generated types and strict document guards now accept `currency`, an ISO 4217 code, on long and wide values, pie values, and waterfall values. Szum writes that role's numbers as money in the chart `locale`, such as `$416B`. Validation rejects a value role that sets both `currency` and `format`.
+
+### Fixed
+
+- `charts.getDocumentState()`, `charts.getDocuments()`, and a `validateChart()` suggested document no longer reject waterfall documents or documents that use `currency`. SDK 4.0.0 throws an invalid-response error for them.
 
 ## [4.0.0] - 2026-09-27
 
