@@ -15,7 +15,9 @@ interface ChartValidationWire {
           reason: string;
           actualBytes?: number;
           maxBytes?: number;
+          [k: string]: unknown;
         };
+        [k: string]: unknown;
       }
     | {
         severity: "error" | "warning" | "suggestion";
@@ -40,7 +42,9 @@ interface ChartValidationWire {
           type?: string;
           sampleValues?: string[];
           samplePaths?: string[];
+          [k: string]: unknown;
         };
+        [k: string]: unknown;
       }
     | {
         severity: "error" | "warning" | "suggestion";
@@ -64,7 +68,9 @@ interface ChartValidationWire {
           axis?: "x" | "y";
           sampleValues?: string[];
           samplePaths?: string[];
+          [k: string]: unknown;
         };
+        [k: string]: unknown;
       }
     | {
         severity: "error" | "warning" | "suggestion";
@@ -88,7 +94,9 @@ interface ChartValidationWire {
            */
           domain?: [number, number];
           samplePaths?: string[];
+          [k: string]: unknown;
         };
+        [k: string]: unknown;
       }
     | {
         severity: "error" | "warning" | "suggestion";
@@ -104,7 +112,9 @@ interface ChartValidationWire {
           field?: string;
           fields?: string[];
           samplePaths?: string[];
+          [k: string]: unknown;
         };
+        [k: string]: unknown;
       }
     | {
         severity: "error" | "warning" | "suggestion";
@@ -119,7 +129,9 @@ interface ChartValidationWire {
           axis?: "x" | "y";
           value?: string;
           statistic?: string;
+          [k: string]: unknown;
         };
+        [k: string]: unknown;
       }
     | {
         severity: "error" | "warning" | "suggestion";
@@ -128,10 +140,31 @@ interface ChartValidationWire {
         message: string;
         code: "render_adjustment";
         details: {
-          reason: "label_collision_suppressed";
-          affectedCount: number;
-          labelRoles: string[];
+          reason: string;
+          affectedCount?: number;
+          labelRoles?: string[];
+          element?: string;
+          [k: string]: unknown;
         };
+        [k: string]: unknown;
+      }
+    | {
+        severity: "error" | "warning" | "suggestion";
+        path: string;
+        relatedPaths?: string[];
+        message: string;
+        code: "workspace_rule";
+        details: SzumSchema0;
+        [k: string]: unknown;
+      }
+    | {
+        severity: "error" | "warning" | "suggestion";
+        path: string;
+        relatedPaths?: string[];
+        message: string;
+        code: string;
+        details: SzumSchema0;
+        [k: string]: unknown;
       }
   )[];
   compatibility?:
@@ -162,6 +195,10 @@ interface ChartValidationWire {
   suggestedDocument?: {
     [k: string]: unknown;
   };
+}
+interface SzumSchema0 {
+  reason: string;
+  [k: string]: unknown;
 }
 
 export type ChartDiagnostic = ChartValidationWire["diagnostics"][number];

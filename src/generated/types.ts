@@ -2851,6 +2851,12 @@ export interface ThemeColorOverrides {
     tickLabel?: Color;
   };
   label?: Color;
+  waterfall?: WaterfallColor;
+}
+export interface WaterfallColor {
+  increase?: Color;
+  decrease?: Color;
+  total?: Color;
 }
 export interface ThemeFontOverrides {
   body?: GoogleFontFamily;
@@ -2955,7 +2961,7 @@ export interface CategoricalCategoryValueReference {
   value: string | number;
 }
 /**
- * Omit for no label. content is an ordered array of text and/or value, without duplicates. text is required when text is included. Values follow the reference's statistic scope and formatting.
+ * Omit for no label. content is an ordered array of text and/or value, without duplicates. text is required exactly when content includes text. Values follow the reference's statistic scope and formatting.
  */
 export interface ReferenceLabel {
   /**
@@ -3261,9 +3267,4 @@ export interface WaterfallValuesRole {
   scale?: LinearScale;
   format?: string;
   currency?: CurrencyCode;
-}
-export interface WaterfallColor {
-  increase?: Color;
-  decrease?: Color;
-  total?: Color;
 }

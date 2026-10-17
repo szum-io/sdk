@@ -2401,21 +2401,7 @@
           "title": "WaterfallLabels"
         },
         "color": {
-          "type": "object",
-          "properties": {
-            "increase": {
-              "$ref": "#/$defs/Color"
-            },
-            "decrease": {
-              "$ref": "#/$defs/Color"
-            },
-            "total": {
-              "$ref": "#/$defs/Color"
-            }
-          },
-          "additionalProperties": false,
-          "minProperties": 1,
-          "title": "WaterfallColor"
+          "$ref": "#/$defs/WaterfallColor"
         },
         "categoryAxis": {
           "$ref": "#/$defs/AxisOptions"
@@ -4485,7 +4471,7 @@
       "title": "ReferenceStroke"
     },
     "ReferenceLabel": {
-      "description": "Omit for no label. content is an ordered array of text and/or value, without duplicates. text is required when text is included. Values follow the reference's statistic scope and formatting.",
+      "description": "Omit for no label. content is an ordered array of text and/or value, without duplicates. text is required exactly when content includes text. Values follow the reference's statistic scope and formatting.",
       "type": "object",
       "properties": {
         "content": {
@@ -4943,6 +4929,23 @@
       ],
       "title": "AxisOptions"
     },
+    "WaterfallColor": {
+      "type": "object",
+      "properties": {
+        "increase": {
+          "$ref": "#/$defs/Color"
+        },
+        "decrease": {
+          "$ref": "#/$defs/Color"
+        },
+        "total": {
+          "$ref": "#/$defs/Color"
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "title": "WaterfallColor"
+    },
     "FieldRole": {
       "type": "object",
       "properties": {
@@ -5317,6 +5320,9 @@
             },
             "label": {
               "$ref": "#/$defs/Color"
+            },
+            "waterfall": {
+              "$ref": "#/$defs/WaterfallColor"
             }
           },
           "additionalProperties": false,

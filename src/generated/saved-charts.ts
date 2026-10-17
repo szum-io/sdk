@@ -84,6 +84,10 @@ interface SavedChartsContract {
      * Optional saved-chart title
      */
     title?: string;
+    /**
+     * Shared theme to link the chart to; omit to start a chart without its own theme in the workspace default
+     */
+    sharedTheme?: string;
   };
   document: {
     document: SzumSchema1 | null;
@@ -123,6 +127,10 @@ interface SavedChartsContract {
      * Case-insensitive title substring search; trimmed and limited to 100 characters
      */
     q?: string;
+    /**
+     * An authorId from a listed chart, or "former" for charts whose author has left the workspace; omit to list every author
+     */
+    author?: string;
     /**
      * Opaque nextCursor from the previous page
      */
@@ -181,6 +189,14 @@ interface SzumSchema0 {
    * Whether an unpublished editor document exists; with sizeBytes 0 the chart is draft-only, otherwise it has unpublished edits alongside a stored published document
    */
   hasDraft: boolean;
+  /**
+   * User id of the person who made the chart, for the author filter; null when unknown
+   */
+  authorId: string | null;
+  /**
+   * Name of the person who made the chart, or Former member when they no longer belong to the workspace
+   */
+  authorName: string;
 }
 
 type SavedChartWire = SavedChartsContract["chart"];

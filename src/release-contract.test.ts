@@ -209,6 +209,51 @@ describe("complete request lifetime", () => {
     );
     expect(result.diagnostics).toEqual(diagnostics);
   });
+  it("returns diagnostics from a later release instead of rejecting the render", async () => {
+    const diagnostics = [
+      {
+        code: "layout_budget_exceeded",
+        severity: "warning",
+        path: "",
+        message: "A diagnostic code this SDK was built before.",
+        details: { reason: "layout_budget_exceeded", budget: 2 },
+      },
+      {
+        code: "render_adjustment",
+        severity: "warning",
+        path: "",
+        message: "The legend was hidden because it did not fit above the plot.",
+        details: { reason: "header_element_omitted", element: "legend" },
+      },
+    ];
+    fetchMock.mockResolvedValue(
+      new Response("<svg/>", {
+        headers: {
+          "Content-Type": "image/svg+xml",
+          "X-Chart-Diagnostics": encodeURIComponent(
+            JSON.stringify(diagnostics),
+          ),
+          "X-Usage-Used": "1",
+          "X-Usage-Limit": "500",
+          "X-Usage-Remaining": "499",
+        },
+      }),
+    );
+
+    const result = await new Szum({ apiKey: "test" }).renderWithMetadata(
+      document,
+    );
+    expect(result.diagnostics).toEqual(diagnostics);
+
+    fetchMock.mockResolvedValue(
+      Response.json({ valid: true, diagnostics }),
+    );
+    await expect(validateChart(document)).resolves.toEqual({
+      valid: true,
+      diagnostics,
+    });
+  });
+
   it("does not fetch when the caller already cancelled", async () => {
     const reason = new Error("already cancelled");
     await expect(
