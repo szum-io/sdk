@@ -10,7 +10,11 @@ import {
   resolveDocument,
   resolveBaseUrl,
 } from "./options";
-import { parseApiFailure, parseValidationResult } from "./response-documents";
+import {
+  parseApiFailure,
+  parseUnrecognizedApiError,
+  parseValidationResult,
+} from "./response-documents";
 
 export type ValidationOptions = {
   baseUrl?: string;
@@ -52,6 +56,17 @@ export const validateChart = async (
       status: response.status,
       requestId: parseRequestId(response),
       failure,
+    });
+  }
+
+  const unrecognized = parseUnrecognizedApiError(body);
+
+  if (unrecognized) {
+    throw createSzumError({
+      message: unrecognized.message,
+      status: response.status,
+      requestId: parseRequestId(response),
+      unrecognized,
     });
   }
 

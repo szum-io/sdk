@@ -239,18 +239,76 @@ describe("complete request lifetime", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 
-  it("rejects retired validation responses instead of guessing their meaning", async () => {
+  it("reads a validation result with fields from a later release", async () => {
     fetchMock.mockResolvedValue(
       Response.json({
         valid: true,
-        message: "Valid chart input",
-        errors: [],
         diagnostics: [],
+        checkedAt: "2026-11-01T00:00:00.000Z",
       }),
+    );
+
+    await expect(validateChart(document)).resolves.toMatchObject({
+      valid: true,
+      diagnostics: [],
+    });
+  });
+
+  it("still rejects a validation result without its required fields", async () => {
+    fetchMock.mockResolvedValue(
+      Response.json({ message: "Valid chart input", errors: [] }),
     );
 
     await expect(validateChart(document)).rejects.toBeInstanceOf(SzumAPIError);
     expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the code, message and retry flag of an error code from a later release", async () => {
+    const error = {
+      code: "quota_paused",
+      message: "This workspace is paused.",
+      retryable: false,
+    };
+    fetchMock.mockResolvedValue(
+      Response.json({ error, pausedUntil: "2026-12-01" }, { status: 403 }),
+    );
+
+    await expect(
+      new Szum({ apiKey: "test" }).render(document),
+    ).rejects.toMatchObject({ ...error, failure: null, status: 403 });
+
+    fetchMock.mockResolvedValue(Response.json({ error }, { status: 400 }));
+
+    await expect(validateChart(document)).rejects.toMatchObject({
+      ...error,
+      failure: null,
+    });
+  });
+
+  it("keeps a known failure that carries fields from a later release", async () => {
+    fetchMock.mockResolvedValue(
+      Response.json(
+        {
+          error: {
+            code: "limit_reached",
+            message: "Too many",
+            retryable: false,
+            details: { retryAfter: 30, window: "month" },
+            docsUrl: "https://szum.io/docs/errors",
+          },
+          requestId: "req-1",
+        },
+        { status: 429 },
+      ),
+    );
+
+    await expect(
+      new Szum({ apiKey: "test" }).render(document),
+    ).rejects.toMatchObject({
+      code: "limit_reached",
+      retryable: false,
+      failure: { error: { details: { retryAfter: 30 } } },
+    });
   });
 
   it("keeps a message for non-contract JSON infrastructure failures", async () => {
@@ -661,7 +719,6 @@ describe("generated response contracts", () => {
     { classification: "lossy", lossCodes: [] },
     { classification: "lossy", lossCodes: [1] },
     { classification: "unsupported", lossCodes: [] },
-    { classification: "unknown", lossCodes: [] },
   ])("rejects malformed compatibility %j", async (compatibility) => {
     fetchMock.mockResolvedValue(
       Response.json({ ...validation, compatibility }),
@@ -670,26 +727,34 @@ describe("generated response contracts", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 
-  it.each(["constructor", "toString", "__proto__"])(
-    "rejects prototype-name diagnostic severity %s",
+  it("returns a compatibility classification from a later release", async () => {
+    const payload = {
+      ...validation,
+      compatibility: { classification: "rewritten", lossCodes: ["x"] },
+    };
+    fetchMock.mockResolvedValue(Response.json(payload));
+
+    await expect(validateChart(document)).resolves.toEqual(payload);
+  });
+
+  it.each(["notice", "constructor", "toString", "__proto__"])(
+    "returns diagnostic severity %s from a later release as a plain string",
     async (severity) => {
-      fetchMock.mockResolvedValue(
-        Response.json({
-          ...validation,
-          diagnostics: [
-            {
-              code: "invalid_structure",
-              path: "",
-              severity,
-              message: "bad",
-              details: { reason: "schema_invalid" },
-            },
-          ],
-        }),
-      );
-      await expect(validateChart(document)).rejects.toBeInstanceOf(
-        SzumAPIError,
-      );
+      const payload = {
+        ...validation,
+        diagnostics: [
+          {
+            code: "invalid_structure",
+            path: "",
+            severity,
+            message: "bad",
+            details: { reason: "schema_invalid" },
+          },
+        ],
+      };
+      fetchMock.mockResolvedValue(Response.json(payload));
+
+      await expect(validateChart(document)).resolves.toEqual(payload);
     },
   );
 

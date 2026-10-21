@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - `charts.getDocumentState()` returns `sharedTheme`, the name of the shared theme the published document is linked to, or `null` when it has none or the theme was deleted. Pass it back to `charts.update()` to keep the link; an update without `sharedTheme` ends it.
 
+### Changed
+
+- Validation results and failures from a later Szum release no longer reject the response. Fields this SDK doesn't know are accepted at every level. A diagnostic `severity` or compatibility `classification` it doesn't know comes back as a plain string, so the generated `ChartDiagnostic` and compatibility types now include `string` for them; give a `switch` over them a default case. A malformed value Szum already defines is still rejected.
+- An error code this SDK doesn't know keeps its server `code`, `message`, and `retryable` on the `SzumError` (with `failure: null`), instead of falling back to the HTTP status text. `retryable: false` on such an error now stops retries.
+
 ## [4.2.0] - 2026-10-21
 
 ### Added

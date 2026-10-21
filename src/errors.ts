@@ -1,5 +1,6 @@
 import type { ChartDiagnostic } from "./generated/validation";
 import type { ApiFailure } from "./generated/failure";
+import type { UnrecognizedApiError } from "./response-documents";
 
 type SzumErrorParams = {
   message: string;
@@ -9,6 +10,7 @@ type SzumErrorParams = {
   code?: string;
   diagnostics?: ChartDiagnostic[] | null;
   failure?: ApiFailure | null;
+  unrecognized?: UnrecognizedApiError | null;
 };
 
 type SzumSubclassParams = Omit<SzumErrorParams, "code">;
@@ -30,16 +32,19 @@ export class SzumError extends Error {
     code,
     diagnostics,
     failure,
+    unrecognized,
   }: SzumErrorParams) {
     super(message);
     this.name = "SzumError";
-    this.code = failure?.error.code ?? code ?? "unknown_error";
+    this.code =
+      failure?.error.code ?? unrecognized?.code ?? code ?? "unknown_error";
     this.status = status;
     this.retryAfter = retryAfter ?? null;
     this.requestId = requestId ?? null;
     this.failure = failure ?? null;
     this.diagnostics = failure?.diagnostics ?? diagnostics ?? null;
-    this.retryable = failure?.error.retryable ?? null;
+    this.retryable =
+      failure?.error.retryable ?? unrecognized?.retryable ?? null;
   }
 
   toJSON() {

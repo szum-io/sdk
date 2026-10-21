@@ -35,6 +35,26 @@ export const parseApiFailure = (body: unknown): ApiFailure | null => {
     : { ...failure, suggestedDocument };
 };
 
+export type UnrecognizedApiError = {
+  code: string;
+  message: string;
+  retryable: boolean;
+};
+
+export const parseUnrecognizedApiError = (
+  body: unknown,
+): UnrecognizedApiError | null => {
+  const error = isRecord(body) ? body.error : null;
+
+  return isRecord(error) &&
+    typeof error.code === "string" &&
+    error.code.length > 0 &&
+    typeof error.message === "string" &&
+    typeof error.retryable === "boolean"
+    ? { code: error.code, message: error.message, retryable: error.retryable }
+    : null;
+};
+
 export const parseValidationResult = (
   body: Record<string, unknown>,
 ): ChartValidationResult | null => {

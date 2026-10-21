@@ -6,29 +6,36 @@ import type { ChartDiagnostic } from "./validation";
 interface ApiFailureWire {
   diagnostics?: unknown[];
   compatibility?:
+    | (
+        | {
+            classification: "exact" | "normalized";
+            /**
+             * @minItems 0
+             * @maxItems 0
+             */
+            lossCodes: [];
+          }
+        | {
+            classification: "lossy";
+            /**
+             * @minItems 1
+             */
+            lossCodes: [string, ...string[]];
+          }
+        | {
+            classification: "unsupported";
+            /**
+             * @minItems 0
+             * @maxItems 0
+             */
+            lossCodes: [];
+            unsupportedCode: string;
+          }
+      )
     | {
-        classification: "exact" | "normalized";
-        /**
-         * @minItems 0
-         * @maxItems 0
-         */
-        lossCodes: [];
-      }
-    | {
-        classification: "lossy";
-        /**
-         * @minItems 1
-         */
-        lossCodes: [string, ...string[]];
-      }
-    | {
-        classification: "unsupported";
-        /**
-         * @minItems 0
-         * @maxItems 0
-         */
-        lossCodes: [];
-        unsupportedCode: string;
+        classification: string;
+        lossCodes: string[];
+        unsupportedCode?: string;
       };
   suggestedDocument?: {
     [k: string]: unknown;

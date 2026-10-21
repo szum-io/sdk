@@ -79,7 +79,7 @@ if (result.suggestedDocument) {
 
 The result includes one `diagnostics` array and the server's optional `compatibility` report (`exact`, `normalized`, `lossy`, or `unsupported`, with loss codes where applicable). There is no top-level `message` or duplicate `errors` array. Diagnostics use stable coarse codes, JSON Pointer paths and closed code-specific details. Warnings and suggestions can appear on a valid chart. The server emits suggested documents only after complete structural and semantic validation; the SDK validates their wire structure and never applies them automatically.
 
-SDK 4 targets the `2026-09-26` contract and rejects retired validation responses. Applications upgrading from 3.x must adopt the document API described below.
+SDK 4 targets the `2026-09-26` contract. It reads results from later Szum releases without failing: fields it doesn't know are kept as they arrive, and a diagnostic severity or compatibility classification it doesn't know comes back as a plain string, so handle unfamiliar values with a default case. Applications upgrading from 3.x must adopt the document API described below.
 
 ## Saved charts
 
@@ -264,7 +264,7 @@ All errors serialize cleanly via `JSON.stringify(err)` (they implement `toJSON`)
 
 Server failures use `{ error: { code, message, retryable, details? }, diagnostics?, compatibility?, suggestedDocument? }`. The SDK validates this generated contract and preserves the server's error code. A completed `validateChart()` call returns its validation result even when the chart is invalid; a failure to run the check throws `SzumError`. `retryable: false` prevents retries, while `true` still requires the operation's retry policy to permit them. Metered renders never retry ambiguous failures.
 
-SDK 4 accepts the structured failure envelope above. Older string-error and `issues` envelopes are not treated as current responses. Framework or infrastructure responses that do not match the contract retain HTTP status and a fallback message.
+SDK 4 accepts the structured failure envelope above, including fields from later releases. An error code this SDK doesn't know still sets `code`, `message`, and `retryable` on the `SzumError`, and leaves `failure` `null`, because `failure` is typed only for codes the SDK knows. A string `error` is not a current response. Framework or infrastructure responses that do not match the contract retain HTTP status and a fallback message.
 
 Auto sizing grows up to 4096 logical pixels per axis and lays out the complete dataset inside that bound. Explicit canvas and plot sizes retain their meaning; PNG density changes raster resolution without changing layout. There is no separate Auto-overflow error.
 

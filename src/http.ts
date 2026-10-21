@@ -9,7 +9,11 @@ import {
 import { SDK_VERSION } from "./version";
 import type { ApiFailure } from "./generated/failure";
 import { assertTransportOptions, MAX_TIMER_MS } from "./options";
-import { parseApiFailure } from "./response-documents";
+import {
+  parseApiFailure,
+  parseUnrecognizedApiError,
+  type UnrecognizedApiError,
+} from "./response-documents";
 
 const RETRY_BASE_MS = 500;
 const RETRY_CAP_MS = 30_000;
@@ -149,17 +153,18 @@ const handleErrorResponse = async (response: Response): Promise<never> => {
   let message =
     response.statusText || `Request failed with HTTP ${response.status}`;
   let failure: ApiFailure | null = null;
+  let unrecognized: UnrecognizedApiError | null = null;
 
   try {
     const text = await response.text();
 
     try {
-      const parsed = parseApiFailure(JSON.parse(text));
-
-      if (parsed) {
-        message = parsed.error.message;
-        failure = parsed;
-      }
+      const body: unknown = JSON.parse(text);
+      failure = parseApiFailure(body);
+      unrecognized =
+        failure === null ? parseUnrecognizedApiError(body) : null;
+      message =
+        failure?.error.message ?? unrecognized?.message ?? message;
     } catch {
       if (text.length > 0) {
         message = text;
@@ -173,6 +178,7 @@ const handleErrorResponse = async (response: Response): Promise<never> => {
     retryAfter: parseRetryAfter(response),
     requestId: parseRequestId(response),
     failure,
+    unrecognized,
   });
 };
 
