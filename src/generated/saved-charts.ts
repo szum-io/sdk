@@ -85,9 +85,9 @@ interface SavedChartsContract {
      */
     title?: string;
     /**
-     * Shared theme to link the chart to; omit to start a chart without its own theme in the workspace default
+     * Shared theme to link the chart to; null starts it unlinked; omit to start a chart without its own theme in the workspace default
      */
-    sharedTheme?: string;
+    sharedTheme?: string | null;
   };
   document: {
     document: SzumSchema1 | null;
@@ -143,6 +143,20 @@ interface SavedChartsContract {
      * Page size; defaults to 100 and has a maximum of 1000
      */
     limit?: number;
+  };
+  updateParams: {
+    /**
+     * Library title; omit to keep a renamed title, while a title that still follows the document follows the new one; an empty title follows the document
+     */
+    title?: string;
+    /**
+     * Shared theme to link the chart to; null ends any link; omit to keep the current link unless the document sets a theme of its own
+     */
+    sharedTheme?: string | null;
+    /**
+     * The chart's updatedAt exactly as read; the update is refused as a conflict when the chart was published or renamed since
+     */
+    expectedUpdatedAt?: string;
   };
 }
 interface SzumSchema1 {
@@ -215,6 +229,7 @@ export type SavedChartListItem = Omit<SavedChartListItemWire, "source"> & {
 
 export type SavedChartListParams = SavedChartsContract["params"];
 export type SavedChartCreateParams = SavedChartsContract["createParams"];
+export type SavedChartUpdateParams = SavedChartsContract["updateParams"];
 
 type SavedChartDocumentStateWire = SavedChartsContract["document"];
 export type SavedChartDocumentState = Omit<

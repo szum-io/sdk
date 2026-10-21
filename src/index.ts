@@ -35,6 +35,7 @@ export type {
   SavedChartPage,
   SavedChartSort,
   SavedChartSource,
+  SavedChartUpdateParams,
 } from "./generated/saved-charts";
 export type { ChartDocumentInput } from "./generated/document";
 export type { ChartConfigInput } from "./generated/types";

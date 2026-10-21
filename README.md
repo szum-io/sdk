@@ -142,6 +142,20 @@ await szum.charts.get(chart.id);
 await szum.charts.delete(chart.id); // also resolves when the chart is already gone
 ```
 
+`update` keeps a chart's library title when it was renamed; a title that still comes from the document follows the new document. Pass `title` to set it, or an empty string to take the document's.
+
+To replace only the version you read, pass its `updatedAt`:
+
+```typescript
+const current = await szum.charts.get(chart.id);
+
+await szum.charts.update(chart.id, nextYear, {
+  expectedUpdatedAt: current.updatedAt,
+});
+```
+
+If the chart was published or renamed since, `update` rejects with a `409` `conflict` and changes nothing; read it again and decide what to do.
+
 `create` is safe to retry. Each call sends its own idempotency key and reuses it across its automatic retries, so a create that timed out after Szum saved it doesn't make a second chart. Pass `idempotencyKey` to keep one key across separate calls or processes.
 
 ### List charts
@@ -193,8 +207,8 @@ const { items: orphaned } = await szum.charts.list({ author: "former" });
 ```
 
 - **Shared themes.** `themes.list` returns the workspace's shared themes, the default first. Pass a theme's `name` as `sharedTheme`; names match regardless of case, and a name the workspace doesn't have fails with the list of names it does have.
-- **Linked charts.** A saved chart linked to a shared theme follows it: when an admin edits the theme, the chart's image and embed change too. `getDocumentState` returns the linked theme's name in `sharedTheme`. Pass it back to `update` to keep the link, because an update without `sharedTheme` ends it.
-- **The default theme.** A document that sets neither `theme` nor `themeOverrides` uses the workspace's default theme. `defaultBuiltInTheme` names that default when it's one of Szum's built-in themes rather than a shared one.
+- **Linked charts.** A saved chart linked to a shared theme follows it: when an admin edits the theme, the chart's image and embed change too. `getDocumentState` returns the linked theme's name in `sharedTheme`. An update without `sharedTheme` keeps the link unless the document sets a different theme of its own, so updating the document you read keeps it. Pass `sharedTheme: null` to end the link and keep the document's own theme.
+- **The default theme.** A document that sets neither `theme` nor `themeOverrides` uses the workspace's default theme. `defaultBuiltInTheme` names that default when it's one of Szum's built-in themes rather than a shared one. Pass `sharedTheme: null` to `create` to start a chart without it.
 - **Chart rules.** A render that breaks a rule set to Block fails with `validation_failed`. Rules set to Warn come back in the render's `diagnostics`. Run `szum.validate` to check a chart against the rules before rendering it.
 - **Authors.** Each listed chart has an `authorId` (`null` when unknown) and an `authorName` (`"Former member"` once the author has left). Filter with an `authorId`, or with `"former"` for charts whose author has left.
 
@@ -277,7 +291,7 @@ All types are exported from the package root.
 - **Documents:** `ChartDocument`, `ChartConfig`, and `ChartDocumentInput` and `ChartConfigInput`, which require `version`
 - **Validation:** `ChartValidationResult`, `ChartDiagnostic`
 - **Rendering:** `RenderOptions`, `RenderResult`, `RenderMetadata`, `RenderUsage`
-- **Saved charts:** `SavedChart`, `SavedChartListItem`, `SavedChartPage`, `SavedChartListParams`, `SavedChartSort`, `SavedChartSource`, `SavedChartDocumentState`, `SavedChartDocuments`, `DocumentMissingReason`, `SavedChartCreateParams`, `SavedChartCreateOptions`, `SavedChartUpdateOptions`
+- **Saved charts:** `SavedChart`, `SavedChartListItem`, `SavedChartPage`, `SavedChartListParams`, `SavedChartSort`, `SavedChartSource`, `SavedChartDocumentState`, `SavedChartDocuments`, `DocumentMissingReason`, `SavedChartCreateParams`, `SavedChartCreateOptions`, `SavedChartUpdateParams`, `SavedChartUpdateOptions`
 - **Themes:** `WorkspaceTheme`, `WorkspaceThemes`
 - **Errors:** `SzumError` and its subclasses, `ApiFailure`, `ApiError`
 - **Options:** `SzumOptions`, `RequestOptions`, `ValidationOptions`

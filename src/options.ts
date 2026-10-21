@@ -60,15 +60,29 @@ export const assertTransportOptions = ({
 };
 
 export const assertSharedTheme = (sharedTheme: unknown): void => {
-  if (
-    sharedTheme !== undefined &&
-    (typeof sharedTheme !== "string" || sharedTheme.trim().length === 0)
-  ) {
+  if (sharedTheme !== undefined && !isSharedThemeName(sharedTheme)) {
     throw new SzumInvalidRequestError({
       message: "sharedTheme must be a non-empty string",
       status: 0,
     });
   }
+};
+
+export const assertSharedThemeChoice = (sharedTheme: unknown): void => {
+  if (
+    sharedTheme !== undefined &&
+    sharedTheme !== null &&
+    !isSharedThemeName(sharedTheme)
+  ) {
+    throw new SzumInvalidRequestError({
+      message: "sharedTheme must be a non-empty string or null",
+      status: 0,
+    });
+  }
+};
+
+const isSharedThemeName = (value: unknown): value is string => {
+  return typeof value === "string" && value.trim().length > 0;
 };
 
 const resolveConfig = (config: ChartConfig): ChartConfigInput => {

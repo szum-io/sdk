@@ -32,8 +32,9 @@ export type SzumOptions = {
   maxRetries?: number;
 };
 
-export type RenderOptions = RequestOptions &
-  Pick<SavedChartCreateParams, "sharedTheme">;
+export type RenderOptions = RequestOptions & {
+  sharedTheme?: NonNullable<SavedChartCreateParams["sharedTheme"]>;
+};
 
 export type RenderResult = RenderMetadata & {
   data: Uint8Array;

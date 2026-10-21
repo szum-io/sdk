@@ -650,6 +650,21 @@ describe("Szum (unit)", () => {
       expect(JSON.parse(init?.body as string).sharedTheme).toBe("Brand");
     });
 
+    it("sends null to start a chart outside the workspace default", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({ body: JSON.stringify(CHART_OBJECT) }),
+      );
+
+      await szum.charts.create(VALID_DOCUMENT, { sharedTheme: null });
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect(JSON.parse(init?.body as string).sharedTheme).toBeNull();
+    });
+
     it("omits sharedTheme when it isn't given", async () => {
       const szum = new Szum({
         apiKey: "sk_test",
@@ -1371,6 +1386,91 @@ describe("Szum (unit)", () => {
         szum.charts.update("abc123", VALID_DOCUMENT, { sharedTheme: "" }),
       ).rejects.toBeInstanceOf(SzumInvalidRequestError);
       expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it("sends the title, the version it read, and null to end a link", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({ body: JSON.stringify(CHART_OBJECT) }),
+      );
+
+      await szum.charts.update("abc123", VALID_DOCUMENT, {
+        title: "Q3 revenue",
+        sharedTheme: null,
+        expectedUpdatedAt: CHART_OBJECT.updatedAt,
+      });
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect(JSON.parse(init?.body as string)).toEqual({
+        document: RESOLVED_DOCUMENT,
+        title: "Q3 revenue",
+        sharedTheme: null,
+        expectedUpdatedAt: CHART_OBJECT.updatedAt,
+      });
+    });
+
+    it("sends only the document when no option is given", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({ body: JSON.stringify(CHART_OBJECT) }),
+      );
+
+      await szum.charts.update("abc123", VALID_DOCUMENT);
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect(JSON.parse(init?.body as string)).toEqual({
+        document: RESOLVED_DOCUMENT,
+      });
+    });
+
+    it.each([{ title: 5 }, { expectedUpdatedAt: 5 }])(
+      "throws SzumInvalidRequestError for %j before sending",
+      async (bad) => {
+        const szum = new Szum({ apiKey: "sk_test" });
+
+        await expect(
+          szum.charts.update(
+            "abc123",
+            VALID_DOCUMENT,
+            bad as unknown as Parameters<typeof szum.charts.update>[2],
+          ),
+        ).rejects.toBeInstanceOf(SzumInvalidRequestError);
+        expect(fetchMock).not.toHaveBeenCalled();
+      },
+    );
+
+    it("refuses a stale update as a conflict without retrying", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({
+          ok: false,
+          status: 409,
+          body: JSON.stringify({
+            error: {
+              code: "conflict",
+              message:
+                "Chart changed after the updatedAt this request expects. Read it again, then retry with its current updatedAt.",
+              retryable: false,
+            },
+          }),
+        }),
+      );
+
+      await expect(
+        szum.charts.update("abc123", VALID_DOCUMENT, {
+          expectedUpdatedAt: CHART_OBJECT.updatedAt,
+        }),
+      ).rejects.toMatchObject({ code: "conflict", status: 409 });
+      expect(fetchMock).toHaveBeenCalledOnce();
     });
 
     it("throws SzumInvalidRequestError when id is empty", async () => {

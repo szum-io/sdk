@@ -9,6 +9,7 @@ import type {
   SavedChartListParams,
   SavedChartPage,
   SavedChartSource,
+  SavedChartUpdateParams,
 } from "./generated/saved-charts";
 import type { ChartDocumentInput } from "./generated/document";
 import {
@@ -23,7 +24,7 @@ import {
   requireStringOrNull,
 } from "./json";
 import { parseRequestId } from "./http";
-import { assertSharedTheme } from "./options";
+import { assertSharedThemeChoice } from "./options";
 import { isResponseDocument } from "./response-documents";
 
 type InternalApi = {
@@ -37,8 +38,16 @@ type InternalApi = {
 
 export type SavedChartCreateOptions = RequestOptions & SavedChartCreateParams;
 
-export type SavedChartUpdateOptions = RequestOptions &
-  Pick<SavedChartCreateParams, "sharedTheme">;
+export type SavedChartUpdateOptions = RequestOptions & SavedChartUpdateParams;
+
+const assertTitle = (title: unknown): void => {
+  if (title !== undefined && typeof title !== "string") {
+    throw new SzumInvalidRequestError({
+      message: "title must be a string",
+      status: 0,
+    });
+  }
+};
 
 const assertId = (id: string): void => {
   if (typeof id !== "string" || id.length === 0) {
@@ -104,7 +113,7 @@ export class SzumCharts {
    * automatic retries), so a committed-but-timed-out create can't produce a
    * duplicate. Pass `options.idempotencyKey` to dedupe across separate calls.
    * In a Team workspace, `options.sharedTheme` links the chart to one of the
-   * workspace's shared themes by name.
+   * workspace's shared themes by name, and `null` skips the workspace default.
    */
   async create(
     document: ChartDocument,
@@ -121,14 +130,8 @@ export class SzumCharts {
       });
     }
 
-    if (options?.title !== undefined && typeof options.title !== "string") {
-      throw new SzumInvalidRequestError({
-        message: "title must be a string",
-        status: 0,
-      });
-    }
-
-    assertSharedTheme(options?.sharedTheme);
+    assertTitle(options?.title);
+    assertSharedThemeChoice(options?.sharedTheme);
 
     const response = await this.api.request(
       "/api/charts",
@@ -243,8 +246,7 @@ export class SzumCharts {
 
   /**
    * Read a chart's complete owner document, including publication and draft.
-   * `sharedTheme` names the shared theme the publication is linked to; pass it
-   * back to `update` to keep the link.
+   * `sharedTheme` names the shared theme the publication is linked to.
    */
   async getDocumentState(
     id: string,
@@ -362,9 +364,12 @@ export class SzumCharts {
   }
 
   /**
-   * Replace a chart's document in place (same id, stable URLs). In a Team
-   * workspace, `options.sharedTheme` links the chart to one of the workspace's
-   * shared themes by name.
+   * Replace a chart's document in place (same id, stable URLs). Without
+   * `options.title`, a renamed chart keeps its title. Without
+   * `options.sharedTheme`, a chart linked to a shared theme keeps the link
+   * unless the document sets a different theme of its own; `null` ends it.
+   * `options.expectedUpdatedAt` refuses the update when the chart changed
+   * since that `updatedAt`.
    */
   async update(
     id: string,
@@ -372,7 +377,18 @@ export class SzumCharts {
     options?: SavedChartUpdateOptions,
   ): Promise<SavedChart> {
     assertId(id);
-    assertSharedTheme(options?.sharedTheme);
+    assertTitle(options?.title);
+    assertSharedThemeChoice(options?.sharedTheme);
+
+    if (
+      options?.expectedUpdatedAt !== undefined &&
+      typeof options.expectedUpdatedAt !== "string"
+    ) {
+      throw new SzumInvalidRequestError({
+        message: "expectedUpdatedAt must be a string",
+        status: 0,
+      });
+    }
 
     const response = await this.api.request(
       `/api/charts/${encodeURIComponent(id)}/document`,
@@ -380,8 +396,12 @@ export class SzumCharts {
         method: "PUT",
         body: JSON.stringify({
           document: this.api.resolveDocument(document),
+          ...(options?.title !== undefined ? { title: options.title } : {}),
           ...(options?.sharedTheme !== undefined
             ? { sharedTheme: options.sharedTheme }
+            : {}),
+          ...(options?.expectedUpdatedAt !== undefined
+            ? { expectedUpdatedAt: options.expectedUpdatedAt }
             : {}),
         }),
       },

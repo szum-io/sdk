@@ -8,11 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- `charts.getDocumentState()` returns `sharedTheme`, the name of the shared theme the published document is linked to, or `null` when it has none or the theme was deleted. Pass it back to `charts.update()` to keep the link; an update without `sharedTheme` ends it.
+- `charts.getDocumentState()` returns `sharedTheme`, the name of the shared theme the published document is linked to, or `null` when it has none or the theme was deleted.
 - `render()` and `renderWithMetadata()` accept `sharedTheme`, the name of one of a Team workspace's shared themes, and render the chart in it. `RenderOptions` describes the render options.
 - `szum.validate()` checks a document with your API key. In a Team workspace, the result also includes the workspace's chart rules as `workspace_rule` diagnostics, and a rule set to Block makes the chart invalid. The standalone `validateChart()` stays anonymous.
+- `charts.update()` accepts `title`, which sets the library title, and `expectedUpdatedAt`, the chart's `updatedAt` as you read it, which refuses the update with a `409` `conflict` when the chart was published or renamed since. `SavedChartUpdateParams` describes them.
+- `charts.create()` and `charts.update()` accept `sharedTheme: null`: a create starts without the workspace's default theme, and an update ends the chart's link.
 
 ### Changed
+
+- An update without `sharedTheme` keeps the chart's link to a shared theme, unless the document sets a different theme of its own, and an update without `title` keeps a renamed chart's title. Both used to be reset. This behavior comes from Szum's server, so it applies to every SDK version once Szum ships it.
 
 - Validation results and failures from a later Szum release no longer reject the response. Fields this SDK doesn't know are accepted at every level. A diagnostic `severity` or compatibility `classification` it doesn't know comes back as a plain string, so the generated `ChartDiagnostic` and compatibility types now include `string` for them; give a `switch` over them a default case. A malformed value Szum already defines is still rejected.
 - An error code this SDK doesn't know keeps its server `code`, `message`, and `retryable` on the `SzumError` (with `failure: null`), instead of falling back to the HTTP status text. `retryable: false` on such an error now stops retries.
