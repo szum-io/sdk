@@ -100,6 +100,101 @@ afterEach(() => {
   fetchMock.mockReset();
 });
 
+const laterReleaseDocument = {
+  ...document,
+  config: { ...document.config, laterOption: { enabled: true } },
+};
+
+describe("documents from a later release", () => {
+  it("returns a saved document with options this SDK predates", async () => {
+    fetchMock.mockResolvedValue(
+      Response.json({
+        document: laterReleaseDocument,
+        draft: null,
+        publishedAt: null,
+        title: "Later",
+      }),
+    );
+
+    const state = await new Szum({ apiKey: "test" }).charts.getDocumentState(
+      "abc123",
+    );
+
+    expect(state.document).toEqual(laterReleaseDocument);
+  });
+
+  it("returns batch documents with options this SDK predates", async () => {
+    fetchMock.mockResolvedValue(
+      Response.json({
+        documents: [{ id: "abc123", document: laterReleaseDocument }],
+        missing: [],
+      }),
+    );
+
+    const { documents } = await new Szum({
+      apiKey: "test",
+    }).charts.getDocuments(["abc123"]);
+
+    expect(documents).toEqual([
+      { id: "abc123", document: laterReleaseDocument },
+    ]);
+  });
+
+  it("returns a suggested document from a later release with the validation result", async () => {
+    fetchMock.mockResolvedValue(
+      Response.json({
+        ...validation,
+        suggestedDocument: laterReleaseDocument,
+      }),
+    );
+
+    await expect(validateChart(document)).resolves.toEqual({
+      ...validation,
+      suggestedDocument: laterReleaseDocument,
+    });
+  });
+
+  it("keeps a structured failure whose suggested document is from a later release", async () => {
+    fetchMock.mockResolvedValue(
+      Response.json(
+        {
+          error: {
+            code: "validation_failed",
+            message: "Fix the chart before rendering.",
+            retryable: false,
+          },
+          diagnostics: [],
+          suggestedDocument: laterReleaseDocument,
+        },
+        { status: 400 },
+      ),
+    );
+
+    await expect(
+      new Szum({ apiKey: "test" }).render(document),
+    ).rejects.toMatchObject({
+      code: "validation_failed",
+      message: "Fix the chart before rendering.",
+      failure: { suggestedDocument: laterReleaseDocument },
+    });
+  });
+
+  it("still rejects a response document that isn't a chart document", async () => {
+    fetchMock.mockResolvedValue(
+      Response.json({
+        document: { version: SCHEMA_VERSION, config: "column" },
+        draft: null,
+        publishedAt: null,
+        title: "Broken",
+      }),
+    );
+
+    await expect(
+      new Szum({ apiKey: "test" }).charts.getDocumentState("abc123"),
+    ).rejects.toBeInstanceOf(SzumAPIError);
+  });
+});
+
 describe("complete request lifetime", () => {
   it("preserves operation failure when validation could not run", async () => {
     fetchMock.mockResolvedValue(
@@ -600,7 +695,6 @@ describe("generated response contracts", () => {
     {},
     { ...document, version: "2026-03-20" },
     { ...document, data: "bad" },
-    { ...document, config: { ...document.config, category: {} } },
   ])(
     "rejects an invalid document at every read boundary: %j",
     async (invalidDocument) => {

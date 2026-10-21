@@ -11,7 +11,6 @@ import type {
   SavedChartSource,
 } from "./generated/saved-charts";
 import type { ChartDocumentInput } from "./generated/document";
-import { isChartDocument } from "./generated/response-validators.js";
 import {
   parseJsonObject,
   requireArray,
@@ -24,6 +23,7 @@ import {
   requireStringOrNull,
 } from "./json";
 import { parseRequestId } from "./http";
+import { isResponseDocument } from "./response-documents";
 
 type InternalApi = {
   request: (
@@ -453,7 +453,7 @@ const parseDocument = (
   value: unknown,
   response: Response,
 ): ChartDocumentInput => {
-  if (!isChartDocument(value)) {
+  if (!isResponseDocument(value)) {
     throw invalidResponseField(response, "document");
   }
 

@@ -1,10 +1,6 @@
 import type { ChartDocument } from "./contracts";
 import { createSzumError, SzumAPIError } from "./errors";
 import type { ChartValidationResult } from "./generated/validation";
-import {
-  isApiFailure,
-  isChartValidationResult,
-} from "./generated/response-validators.js";
 import { fetchWithRetry, parseRequestId, USER_AGENT } from "./http";
 import { parseJsonObject } from "./json";
 import {
@@ -14,6 +10,7 @@ import {
   resolveDocument,
   resolveBaseUrl,
 } from "./options";
+import { parseApiFailure, parseValidationResult } from "./response-documents";
 
 export type ValidationOptions = {
   baseUrl?: string;
@@ -47,21 +44,24 @@ export const validateChart = async (
     },
   );
   const body = await parseJsonObject(response);
+  const failure = parseApiFailure(body);
 
-  if (isApiFailure(body)) {
+  if (failure) {
     throw createSzumError({
-      message: body.error.message,
+      message: failure.error.message,
       status: response.status,
       requestId: parseRequestId(response),
-      failure: body,
+      failure,
     });
   }
 
-  if (!isChartValidationResult(body)) {
+  const result = parseValidationResult(body);
+
+  if (!result) {
     throw invalidValidationResponse(response);
   }
 
-  return body;
+  return result;
 };
 
 const invalidValidationResponse = (response: Response): SzumAPIError =>

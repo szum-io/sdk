@@ -7,9 +7,9 @@ import {
   SzumRateLimitError,
 } from "./errors";
 import { SDK_VERSION } from "./version";
-import { isApiFailure } from "./generated/response-validators.js";
 import type { ApiFailure } from "./generated/failure";
 import { assertTransportOptions, MAX_TIMER_MS } from "./options";
+import { parseApiFailure } from "./response-documents";
 
 const RETRY_BASE_MS = 500;
 const RETRY_CAP_MS = 30_000;
@@ -154,11 +154,11 @@ const handleErrorResponse = async (response: Response): Promise<never> => {
     const text = await response.text();
 
     try {
-      const body: unknown = JSON.parse(text);
+      const parsed = parseApiFailure(JSON.parse(text));
 
-      if (isApiFailure(body)) {
-        message = body.error.message;
-        failure = body;
+      if (parsed) {
+        message = parsed.error.message;
+        failure = parsed;
       }
     } catch {
       if (text.length > 0) {

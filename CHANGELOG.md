@@ -13,6 +13,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `charts.list()` accepts `author`, an `authorId` from a listed chart or `"former"` for charts whose author has left the workspace. Each listed chart carries `authorId` and `authorName`.
 - Validation and render diagnostics type the `workspace_rule` code, whose details list the accepted themes in `allowedThemes` and chart types in `allowedChartTypes`.
 
+### Changed
+
+- Documents Szum returns are checked for their shape only: `charts.getDocumentState()`, `charts.getDocuments()`, a `validateChart()` result's `suggestedDocument`, and the `suggestedDocument` of an error. A document that uses chart types or options from a later Szum release is returned as it is instead of rejecting the response. Documents you send are still validated in full by Szum.
+
 ### Fixed
 
 - Diagnostics from a later Szum release, such as an unfamiliar code, reason, or detail, are returned instead of rejecting the render or validation response.
