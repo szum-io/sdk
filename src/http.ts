@@ -31,6 +31,11 @@ type FetchOptions = {
   retryMode?: "safe" | "rate-limit-only";
 };
 
+export type RequestPolicy = Pick<
+  FetchOptions,
+  "acceptedStatuses" | "retryMode"
+>;
+
 export const fetchWithRetry = async (
   url: string,
   init: RequestInit,
@@ -161,10 +166,8 @@ const handleErrorResponse = async (response: Response): Promise<never> => {
     try {
       const body: unknown = JSON.parse(text);
       failure = parseApiFailure(body);
-      unrecognized =
-        failure === null ? parseUnrecognizedApiError(body) : null;
-      message =
-        failure?.error.message ?? unrecognized?.message ?? message;
+      unrecognized = failure === null ? parseUnrecognizedApiError(body) : null;
+      message = failure?.error.message ?? unrecognized?.message ?? message;
     } catch {
       if (text.length > 0) {
         message = text;

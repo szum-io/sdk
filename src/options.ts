@@ -1,4 +1,5 @@
 import type { ChartConfig, ChartDocument } from "./contracts";
+import { SzumInvalidRequestError } from "./errors";
 import type { ChartDocumentInput } from "./generated/document";
 import type { ChartConfigInput } from "./generated/types";
 import { SCHEMA_VERSION } from "./generated/version";
@@ -55,6 +56,18 @@ export const assertTransportOptions = ({
     (!Number.isSafeInteger(maxRetries) || maxRetries < 0)
   ) {
     throw new Error("maxRetries must be a non-negative integer");
+  }
+};
+
+export const assertSharedTheme = (sharedTheme: unknown): void => {
+  if (
+    sharedTheme !== undefined &&
+    (typeof sharedTheme !== "string" || sharedTheme.trim().length === 0)
+  ) {
+    throw new SzumInvalidRequestError({
+      message: "sharedTheme must be a non-empty string",
+      status: 0,
+    });
   }
 };
 

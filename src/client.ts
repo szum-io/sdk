@@ -1,10 +1,18 @@
 import { SzumCharts } from "./charts";
 import type { ChartDocument, RequestOptions } from "./contracts";
 import type { RenderMetadata, RenderUsage } from "./generated/render";
+import type { SavedChartCreateParams } from "./generated/saved-charts";
+import type { ChartValidationResult } from "./generated/validation";
 import { SzumAPIError } from "./errors";
 import { parseChartDiagnostics } from "./diagnostics";
-import { fetchWithRetry, parseRequestId, USER_AGENT } from "./http";
 import {
+  fetchWithRetry,
+  parseRequestId,
+  type RequestPolicy,
+  USER_AGENT,
+} from "./http";
+import {
+  assertSharedTheme,
   assertTransportOptions,
   DEFAULT_MAX_RETRIES,
   DEFAULT_TIMEOUT,
@@ -12,6 +20,10 @@ import {
   resolveBaseUrl,
 } from "./options";
 import { SzumThemes } from "./themes";
+import {
+  parseValidationResponse,
+  VALIDATION_REQUEST_POLICY,
+} from "./validation";
 
 export type SzumOptions = {
   apiKey: string;
@@ -19,6 +31,9 @@ export type SzumOptions = {
   timeout?: number;
   maxRetries?: number;
 };
+
+export type RenderOptions = RequestOptions &
+  Pick<SavedChartCreateParams, "sharedTheme">;
 
 export type RenderResult = RenderMetadata & {
   data: Uint8Array;
@@ -61,7 +76,7 @@ export class Szum {
 
   async render(
     request: ChartDocument,
-    options?: RequestOptions,
+    options?: RenderOptions,
   ): Promise<Uint8Array> {
     const response = await this.renderResponse(request, options);
 
@@ -70,7 +85,7 @@ export class Szum {
 
   async renderWithMetadata(
     request: ChartDocument,
-    options?: RequestOptions,
+    options?: RenderOptions,
   ): Promise<RenderResult> {
     const response = await this.renderResponse(request, options);
     const buffer = await response.arrayBuffer();
@@ -84,18 +99,42 @@ export class Szum {
     };
   }
 
+  async validate(
+    document: ChartDocument,
+    options?: RequestOptions,
+  ): Promise<ChartValidationResult> {
+    const response = await this.request(
+      "/validate",
+      {
+        method: "POST",
+        body: JSON.stringify(resolveDocument(document)),
+      },
+      options,
+      VALIDATION_REQUEST_POLICY,
+    );
+
+    return parseValidationResponse(response);
+  }
+
   private async renderResponse(
     request: ChartDocument,
-    options?: RequestOptions,
+    options?: RenderOptions,
   ): Promise<Response> {
+    assertSharedTheme(options?.sharedTheme);
+
+    const query =
+      options?.sharedTheme === undefined
+        ? ""
+        : `?${new URLSearchParams({ sharedTheme: options.sharedTheme })}`;
+
     return this.request(
-      "/chart",
+      `/chart${query}`,
       {
         method: "POST",
         body: JSON.stringify(resolveDocument(request)),
       },
       options,
-      "rate-limit-only",
+      { retryMode: "rate-limit-only" },
     );
   }
 
@@ -103,7 +142,7 @@ export class Szum {
     path: string,
     init: Omit<RequestInit, "headers">,
     options?: RequestOptions,
-    retryMode: "safe" | "rate-limit-only" = "safe",
+    policy: RequestPolicy = {},
   ): Promise<Response> {
     return fetchWithRetry(
       `${this.baseUrl}${path}`,
@@ -112,7 +151,7 @@ export class Szum {
         timeout: options?.timeout ?? this.timeout,
         maxRetries: this.maxRetries,
         signal: options?.signal,
-        retryMode,
+        ...policy,
       },
     );
   }

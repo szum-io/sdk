@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - `charts.getDocumentState()` returns `sharedTheme`, the name of the shared theme the published document is linked to, or `null` when it has none or the theme was deleted. Pass it back to `charts.update()` to keep the link; an update without `sharedTheme` ends it.
+- `render()` and `renderWithMetadata()` accept `sharedTheme`, the name of one of a Team workspace's shared themes, and render the chart in it. `RenderOptions` describes the render options.
+- `szum.validate()` checks a document with your API key. In a Team workspace, the result also includes the workspace's chart rules as `workspace_rule` diagnostics, and a rule set to Block makes the chart invalid. The standalone `validateChart()` stays anonymous.
 
 ### Changed
 

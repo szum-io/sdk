@@ -7,7 +7,12 @@ export {
   type ChartConfig,
   type ChartDocument,
 } from "./contracts";
-export { type RenderResult, Szum, type SzumOptions } from "./client";
+export {
+  type RenderOptions,
+  type RenderResult,
+  Szum,
+  type SzumOptions,
+} from "./client";
 export {
   SzumAPIError,
   SzumAuthenticationError,

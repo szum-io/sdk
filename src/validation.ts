@@ -1,7 +1,12 @@
 import type { ChartDocument } from "./contracts";
 import { createSzumError, SzumAPIError } from "./errors";
 import type { ChartValidationResult } from "./generated/validation";
-import { fetchWithRetry, parseRequestId, USER_AGENT } from "./http";
+import {
+  fetchWithRetry,
+  parseRequestId,
+  type RequestPolicy,
+  USER_AGENT,
+} from "./http";
 import { parseJsonObject } from "./json";
 import {
   assertTransportOptions,
@@ -23,6 +28,11 @@ export type ValidationOptions = {
   signal?: AbortSignal;
 };
 
+export const VALIDATION_REQUEST_POLICY = {
+  acceptedStatuses: [400, 413],
+  retryMode: "safe",
+} as const satisfies RequestPolicy;
+
 export const validateChart = async (
   chart: ChartDocument,
   options: ValidationOptions = {},
@@ -43,10 +53,16 @@ export const validateChart = async (
       timeout: options.timeout ?? DEFAULT_TIMEOUT,
       maxRetries: options.maxRetries ?? DEFAULT_MAX_RETRIES,
       signal: options.signal,
-      acceptedStatuses: [400, 413],
-      retryMode: "safe",
+      ...VALIDATION_REQUEST_POLICY,
     },
   );
+
+  return parseValidationResponse(response);
+};
+
+export const parseValidationResponse = async (
+  response: Response,
+): Promise<ChartValidationResult> => {
   const body = await parseJsonObject(response);
   const failure = parseApiFailure(body);
 

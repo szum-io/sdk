@@ -162,6 +162,32 @@ describe("Szum (unit)", () => {
       expect(headers["User-Agent"]).toMatch(/^szum-sdk\//);
     });
 
+    it("sends a shared theme by name as a query parameter", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({ body: new ArrayBuffer(0) }),
+      );
+
+      await szum.render(VALID_DOCUMENT, { sharedTheme: "Brand colors" });
+
+      const [url, init] = fetchMock.mock.calls[0];
+      expect(new URL(url).searchParams.get("sharedTheme")).toBe("Brand colors");
+      expect(new URL(url).pathname).toBe("/chart");
+      expect(JSON.parse(init?.body as string)).toEqual(RESOLVED_DOCUMENT);
+    });
+
+    it("throws SzumInvalidRequestError when sharedTheme is blank", async () => {
+      const szum = new Szum({ apiKey: "sk_test" });
+
+      await expect(
+        szum.renderWithMetadata(VALID_DOCUMENT, { sharedTheme: " " }),
+      ).rejects.toBeInstanceOf(SzumInvalidRequestError);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
     it("injects schema version when not provided", async () => {
       const szum = new Szum({
         apiKey: "sk_test",
@@ -923,6 +949,82 @@ describe("Szum (unit)", () => {
           baseUrl: "https://test.szum.io",
         }),
       ).resolves.toMatchObject({ valid: false, diagnostics: [issue] });
+    });
+  });
+
+  describe("validate", () => {
+    it("validates the document with the API key", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({
+          body: JSON.stringify({ valid: true, diagnostics: [] }),
+        }),
+      );
+
+      const result = await szum.validate(VALID_DOCUMENT);
+
+      const [url, init] = fetchMock.mock.calls[0];
+      expect(url).toBe("https://test.szum.io/validate");
+      expect(init?.method).toBe("POST");
+      expect(JSON.parse(init?.body as string)).toEqual(RESOLVED_DOCUMENT);
+      expect((init?.headers as Record<string, string>).Authorization).toBe(
+        "Bearer sk_test",
+      );
+      expect(result).toEqual({ valid: true, diagnostics: [] });
+    });
+
+    it("returns an invalid result that breaks a workspace rule", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      const finding = {
+        code: "workspace_rule",
+        severity: "error",
+        path: "/config/type",
+        message: "This workspace doesn't allow column charts.",
+        details: { reason: "chart_type", allowedChartTypes: ["bar"] },
+      };
+      fetchMock.mockResolvedValue(
+        createMockResponse({
+          ok: false,
+          status: 400,
+          body: JSON.stringify({ valid: false, diagnostics: [finding] }),
+        }),
+      );
+
+      await expect(szum.validate(VALID_DOCUMENT)).resolves.toEqual({
+        valid: false,
+        diagnostics: [finding],
+      });
+    });
+
+    it("throws SzumAuthenticationError when the key is rejected", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({
+          ok: false,
+          status: 401,
+          body: JSON.stringify({
+            error: {
+              code: "authentication_required",
+              message: "Invalid API key",
+              retryable: false,
+            },
+          }),
+        }),
+      );
+
+      await expect(szum.validate(VALID_DOCUMENT)).rejects.toBeInstanceOf(
+        SzumAuthenticationError,
+      );
+      expect(fetchMock).toHaveBeenCalledOnce();
     });
   });
 

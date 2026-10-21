@@ -23,6 +23,7 @@ import {
   requireStringOrNull,
 } from "./json";
 import { parseRequestId } from "./http";
+import { assertSharedTheme } from "./options";
 import { isResponseDocument } from "./response-documents";
 
 type InternalApi = {
@@ -38,18 +39,6 @@ export type SavedChartCreateOptions = RequestOptions & SavedChartCreateParams;
 
 export type SavedChartUpdateOptions = RequestOptions &
   Pick<SavedChartCreateParams, "sharedTheme">;
-
-const assertSharedTheme = (sharedTheme: unknown): void => {
-  if (
-    sharedTheme !== undefined &&
-    (typeof sharedTheme !== "string" || sharedTheme.trim().length === 0)
-  ) {
-    throw new SzumInvalidRequestError({
-      message: "sharedTheme must be a non-empty string",
-      status: 0,
-    });
-  }
-};
 
 const assertId = (id: string): void => {
   if (typeof id !== "string" || id.length === 0) {
