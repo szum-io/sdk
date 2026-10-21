@@ -11,6 +11,7 @@ import {
   resolveDocument,
   resolveBaseUrl,
 } from "./options";
+import { SzumThemes } from "./themes";
 
 export type SzumOptions = {
   apiKey: string;
@@ -29,6 +30,7 @@ export class Szum {
   private readonly timeout: number;
   private readonly maxRetries: number;
   readonly charts: SzumCharts;
+  readonly themes: SzumThemes;
 
   constructor({ apiKey, baseUrl, timeout, maxRetries }: SzumOptions) {
     if (typeof window !== "undefined" && typeof document !== "undefined") {
@@ -51,6 +53,9 @@ export class Szum {
     this.charts = new SzumCharts({
       request: (path, init, opts) => this.request(path, init, opts),
       resolveDocument,
+    });
+    this.themes = new SzumThemes({
+      request: (path, init, opts) => this.request(path, init, opts),
     });
   }
 

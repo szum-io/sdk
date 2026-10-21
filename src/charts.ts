@@ -36,6 +36,21 @@ type InternalApi = {
 
 export type SavedChartCreateOptions = RequestOptions & SavedChartCreateParams;
 
+export type SavedChartUpdateOptions = RequestOptions &
+  Pick<SavedChartCreateParams, "sharedTheme">;
+
+const assertSharedTheme = (sharedTheme: unknown): void => {
+  if (
+    sharedTheme !== undefined &&
+    (typeof sharedTheme !== "string" || sharedTheme.trim().length === 0)
+  ) {
+    throw new SzumInvalidRequestError({
+      message: "sharedTheme must be a non-empty string",
+      status: 0,
+    });
+  }
+};
+
 const assertId = (id: string): void => {
   if (typeof id !== "string" || id.length === 0) {
     throw new SzumInvalidRequestError({
@@ -99,6 +114,8 @@ export class SzumCharts {
    * `Idempotency-Key` is generated per call (and reused across this call's
    * automatic retries), so a committed-but-timed-out create can't produce a
    * duplicate. Pass `options.idempotencyKey` to dedupe across separate calls.
+   * In a Team workspace, `options.sharedTheme` links the chart to one of the
+   * workspace's shared themes by name.
    */
   async create(
     document: ChartDocument,
@@ -122,6 +139,8 @@ export class SzumCharts {
       });
     }
 
+    assertSharedTheme(options?.sharedTheme);
+
     const response = await this.api.request(
       "/api/charts",
       {
@@ -129,6 +148,9 @@ export class SzumCharts {
         body: JSON.stringify({
           document: this.api.resolveDocument(document),
           ...(options?.title !== undefined ? { title: options.title } : {}),
+          ...(options?.sharedTheme !== undefined
+            ? { sharedTheme: options.sharedTheme }
+            : {}),
         }),
       },
       {
@@ -146,8 +168,9 @@ export class SzumCharts {
    * as `cursor` to page on; `null` means the last page). Omit `source` to list
    * every chart. The cursor is coupled to `sort`, so keep the sort stable while
    * paging. `q` is a case-insensitive title substring filter; when set, the page
-   * also carries `total` (the exact match count). Each item carries a `hasDraft`
-   * flag.
+   * also carries `total` (the exact match count). `author` takes an `authorId`
+   * from a listed chart, or `"former"` for charts whose author has left the
+   * workspace. Each item carries a `hasDraft` flag and its author.
    */
   async list(
     params?: SavedChartListParams,
@@ -171,6 +194,10 @@ export class SzumCharts {
 
     if (params?.q) {
       search.set("q", params.q);
+    }
+
+    if (params?.author) {
+      search.set("author", params.author);
     }
 
     if (params?.cursor) {
@@ -203,6 +230,8 @@ export class SzumCharts {
         return {
           ...parseSavedChart(response, record),
           hasDraft: requireBoolean(record, "hasDraft", response),
+          authorId: requireStringOrNull(record, "authorId", response),
+          authorName: requireString(record, "authorName", response),
         };
       }),
       nextCursor,
@@ -338,19 +367,29 @@ export class SzumCharts {
     return { documents, missing };
   }
 
-  /** Replace a chart's document in place (same id, stable URLs). */
+  /**
+   * Replace a chart's document in place (same id, stable URLs). In a Team
+   * workspace, `options.sharedTheme` links the chart to one of the workspace's
+   * shared themes by name.
+   */
   async update(
     id: string,
     document: ChartDocument,
-    options?: RequestOptions,
+    options?: SavedChartUpdateOptions,
   ): Promise<SavedChart> {
     assertId(id);
+    assertSharedTheme(options?.sharedTheme);
 
     const response = await this.api.request(
       `/api/charts/${encodeURIComponent(id)}/document`,
       {
         method: "PUT",
-        body: JSON.stringify({ document: this.api.resolveDocument(document) }),
+        body: JSON.stringify({
+          document: this.api.resolveDocument(document),
+          ...(options?.sharedTheme !== undefined
+            ? { sharedTheme: options.sharedTheme }
+            : {}),
+        }),
       },
       options,
     );

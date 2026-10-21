@@ -1,4 +1,7 @@
-export { type SavedChartCreateOptions } from "./charts";
+export {
+  type SavedChartCreateOptions,
+  type SavedChartUpdateOptions,
+} from "./charts";
 export {
   type RequestOptions,
   type ChartConfig,
@@ -35,4 +38,5 @@ export type {
   ChartValidationResult,
 } from "./generated/validation";
 export { SCHEMA_VERSION } from "./generated/version";
+export { type WorkspaceTheme, type WorkspaceThemes } from "./themes";
 export { type ValidationOptions, validateChart } from "./validation";

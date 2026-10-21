@@ -144,6 +144,7 @@ interface ChartValidationWire {
           affectedCount?: number;
           labelRoles?: string[];
           element?: string;
+          axis?: "x" | "y";
           [k: string]: unknown;
         };
         [k: string]: unknown;
@@ -154,7 +155,27 @@ interface ChartValidationWire {
         relatedPaths?: string[];
         message: string;
         code: "workspace_rule";
-        details: SzumSchema0;
+        details: {
+          reason: string;
+          allowedThemes?: {
+            id:
+              | {
+                  kind: "built-in";
+                  theme: "editorial" | "clean" | "noir" | "loud" | "soft" | "technical";
+                }
+              | {
+                  kind: "shared";
+                  themeId: string;
+                };
+            name: string;
+            value: {
+              theme: "editorial" | "clean" | "noir" | "loud" | "soft" | "technical";
+              [k: string]: unknown;
+            };
+          }[];
+          allowedChartTypes?: ("column" | "bar" | "line" | "area" | "scatter" | "pie" | "waterfall")[];
+          [k: string]: unknown;
+        };
         [k: string]: unknown;
       }
     | {
@@ -163,7 +184,10 @@ interface ChartValidationWire {
         relatedPaths?: string[];
         message: string;
         code: string;
-        details: SzumSchema0;
+        details: {
+          reason: string;
+          [k: string]: unknown;
+        };
         [k: string]: unknown;
       }
   )[];
@@ -195,10 +219,6 @@ interface ChartValidationWire {
   suggestedDocument?: {
     [k: string]: unknown;
   };
-}
-interface SzumSchema0 {
-  reason: string;
-  [k: string]: unknown;
 }
 
 export type ChartDiagnostic = ChartValidationWire["diagnostics"][number];

@@ -49,6 +49,8 @@ const CHART_OBJECT = {
   documentUrl: "https://szum.io/api/charts/abc123/document",
 };
 
+const AUTHOR = { authorId: "user-1", authorName: "Ada Lovelace" };
+
 const createMockResponse = ({
   ok = true,
   status = 200,
@@ -605,6 +607,45 @@ describe("Szum (unit)", () => {
 
       const [, init] = fetchMock.mock.calls[0];
       expect(JSON.parse(init?.body as string).title).toBe("API revenue");
+    });
+
+    it("sends a shared theme by name", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({ body: JSON.stringify(CHART_OBJECT) }),
+      );
+
+      await szum.charts.create(VALID_DOCUMENT, { sharedTheme: "Brand" });
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect(JSON.parse(init?.body as string).sharedTheme).toBe("Brand");
+    });
+
+    it("omits sharedTheme when it isn't given", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({ body: JSON.stringify(CHART_OBJECT) }),
+      );
+
+      await szum.charts.create(VALID_DOCUMENT);
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect("sharedTheme" in JSON.parse(init?.body as string)).toBe(false);
+    });
+
+    it("throws SzumInvalidRequestError when sharedTheme is blank", async () => {
+      const szum = new Szum({ apiKey: "sk_test" });
+
+      await expect(
+        szum.charts.create(VALID_DOCUMENT, { sharedTheme: " " }),
+      ).rejects.toBeInstanceOf(SzumInvalidRequestError);
+      expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it("returns the chart object on success", async () => {
@@ -1176,11 +1217,118 @@ describe("Szum (unit)", () => {
       expect(result).toEqual(CHART_OBJECT);
     });
 
+    it("sends a shared theme by name", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({ body: JSON.stringify(CHART_OBJECT) }),
+      );
+
+      await szum.charts.update("abc123", VALID_DOCUMENT, {
+        sharedTheme: "Brand",
+      });
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect(JSON.parse(init?.body as string)).toEqual({
+        document: RESOLVED_DOCUMENT,
+        sharedTheme: "Brand",
+      });
+    });
+
+    it("throws SzumInvalidRequestError when sharedTheme is blank", async () => {
+      const szum = new Szum({ apiKey: "sk_test" });
+
+      await expect(
+        szum.charts.update("abc123", VALID_DOCUMENT, { sharedTheme: "" }),
+      ).rejects.toBeInstanceOf(SzumInvalidRequestError);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
     it("throws SzumInvalidRequestError when id is empty", async () => {
       const szum = new Szum({ apiKey: "sk_test" });
       await expect(
         szum.charts.update("", VALID_DOCUMENT),
       ).rejects.toBeInstanceOf(SzumInvalidRequestError);
+    });
+  });
+
+  describe("themes.list", () => {
+    it("GETs /api/themes and returns the shared themes and built-in default", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({
+          body: JSON.stringify({
+            themes: [
+              {
+                name: "Brand",
+                theme: "clean",
+                themeOverrides: { colors: { categorical: ["#23314c"] } },
+                isDefault: false,
+              },
+              { name: "Plain", theme: "editorial", isDefault: false },
+            ],
+            defaultBuiltInTheme: "noir",
+          }),
+        }),
+      );
+
+      const result = await szum.themes.list();
+
+      const [url, init] = fetchMock.mock.calls[0];
+      expect(url).toBe("https://test.szum.io/api/themes");
+      expect(init?.method).toBe("GET");
+      expect(result).toEqual({
+        themes: [
+          {
+            name: "Brand",
+            theme: "clean",
+            themeOverrides: { colors: { categorical: ["#23314c"] } },
+            isDefault: false,
+          },
+          { name: "Plain", theme: "editorial", isDefault: false },
+        ],
+        defaultBuiltInTheme: "noir",
+      });
+      expect("themeOverrides" in result.themes[1]).toBe(false);
+    });
+
+    it("returns no themes and no default for a personal workspace", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({
+          body: JSON.stringify({ themes: [], defaultBuiltInTheme: null }),
+        }),
+      );
+
+      await expect(szum.themes.list()).resolves.toEqual({
+        themes: [],
+        defaultBuiltInTheme: null,
+      });
+    });
+
+    it("rejects a theme the server sends without isDefault", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({
+          body: JSON.stringify({
+            themes: [{ name: "Brand", theme: "clean" }],
+            defaultBuiltInTheme: null,
+          }),
+        }),
+      );
+
+      await expect(szum.themes.list()).rejects.toBeInstanceOf(SzumAPIError);
     });
   });
 
@@ -1242,7 +1390,7 @@ describe("Szum (unit)", () => {
       fetchMock.mockResolvedValue(
         createMockResponse({
           body: JSON.stringify({
-            items: [{ ...CHART_OBJECT, hasDraft: true }],
+            items: [{ ...CHART_OBJECT, hasDraft: true, ...AUTHOR }],
             nextCursor: "c1",
           }),
         }),
@@ -1259,7 +1407,9 @@ describe("Szum (unit)", () => {
         "https://test.szum.io/api/charts?source=api&cursor=prev&limit=100",
       );
       expect(init?.method).toBe("GET");
-      expect(result.items).toEqual([{ ...CHART_OBJECT, hasDraft: true }]);
+      expect(result.items).toEqual([
+        { ...CHART_OBJECT, hasDraft: true, ...AUTHOR },
+      ]);
       expect(result.nextCursor).toBe("c1");
     });
 
@@ -1270,11 +1420,66 @@ describe("Szum (unit)", () => {
       });
       fetchMock.mockResolvedValue(
         createMockResponse({
-          body: JSON.stringify({ items: [CHART_OBJECT], nextCursor: null }),
+          body: JSON.stringify({
+            items: [{ ...CHART_OBJECT, ...AUTHOR }],
+            nextCursor: null,
+          }),
         }),
       );
 
       await expect(szum.charts.list()).rejects.toBeInstanceOf(SzumAPIError);
+    });
+
+    it("rejects a list item when the server omits authorName", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({
+          body: JSON.stringify({
+            items: [{ ...CHART_OBJECT, hasDraft: false, authorId: null }],
+            nextCursor: null,
+          }),
+        }),
+      );
+
+      await expect(szum.charts.list()).rejects.toBeInstanceOf(SzumAPIError);
+    });
+
+    it("forwards author and returns each item's author", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({
+          body: JSON.stringify({
+            items: [
+              {
+                ...CHART_OBJECT,
+                hasDraft: false,
+                authorId: null,
+                authorName: "Former member",
+              },
+            ],
+            nextCursor: null,
+          }),
+        }),
+      );
+
+      const result = await szum.charts.list({ author: "former" });
+
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toBe("https://test.szum.io/api/charts?author=former");
+      expect(result.items).toEqual([
+        {
+          ...CHART_OBJECT,
+          hasDraft: false,
+          authorId: null,
+          authorName: "Former member",
+        },
+      ]);
     });
 
     it("forwards sort and q, and surfaces total when present", async () => {
@@ -1285,7 +1490,7 @@ describe("Szum (unit)", () => {
       fetchMock.mockResolvedValue(
         createMockResponse({
           body: JSON.stringify({
-            items: [{ ...CHART_OBJECT, hasDraft: false }],
+            items: [{ ...CHART_OBJECT, hasDraft: false, ...AUTHOR }],
             nextCursor: null,
             total: 1,
           }),

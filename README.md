@@ -151,6 +151,26 @@ await szum.charts.rename(id, "Q3 revenue by region");
 
 Batch preview documents prefer the saved draft when one exists. Use `getDocumentState(id).document` when you specifically need the published document. `update` rejects with HTTP `409` while a Studio draft exists; resolve that draft in Studio before replacing the publication through the API.
 
+### Team workspaces
+
+An API key belongs to one workspace, so every call acts on that workspace. In a Team workspace, link a chart to one of the workspace's shared themes by name, and filter the library by author:
+
+```typescript
+// The workspace's shared themes, the default first
+const { themes, defaultBuiltInTheme } = await szum.themes.list();
+
+// Create or replace a chart linked to a shared theme
+const chart = await szum.charts.create(document, { sharedTheme: "Brand" });
+await szum.charts.update(chart.id, document, { sharedTheme: "Brand" });
+
+// Charts by one author (an authorId from a listed chart), or by people who
+// have left the workspace
+const { items: byAuthor } = await szum.charts.list({ author: authorId });
+const { items: orphaned } = await szum.charts.list({ author: "former" });
+```
+
+A linked chart follows the shared theme: when an admin edits it, the chart's image and embed change too. A document that sets neither `theme` nor `themeOverrides` starts in the workspace's default theme. `defaultBuiltInTheme` names the default when it is one of Szum's built-in themes rather than a shared one. Each `list` item carries `authorId` (`null` when unknown) and `authorName` (`"Former member"` once the author has left). A personal workspace has no shared themes.
+
 ## Configuration
 
 Axes, color/size legends, and line points accept `true` for default settings, `false` to hide, or a configuration object that enables those settings:
@@ -252,7 +272,7 @@ Auto sizing grows up to 4096 logical pixels per axis and lays out the complete d
 
 | Export                    | Description                                                                                                |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `Szum`                    | Authenticated client (`render`, `renderWithMetadata`, and the `charts` resource)                           |
+| `Szum`                    | Authenticated client (`render`, `renderWithMetadata`, and the `charts` and `themes` resources)             |
 | `validateChart`           | Anonymous, side-effect-free chart validation                                                               |
 | `SzumOptions`             | Constructor options (`apiKey`, `timeout`, `maxRetries`, …)                                                 |
 | `ValidationOptions`       | Validation transport options (`baseUrl`, `timeout`, `maxRetries`, `signal`)                                |
@@ -275,15 +295,18 @@ Auto sizing grows up to 4096 logical pixels per axis and lays out the complete d
 | `ChartDiagnostic`         | One structured validation or request diagnostic                                                            |
 | `ChartValidationResult`   | Result returned by `validateChart`                                                                         |
 | `SavedChart`              | Saved-chart object from `charts.create`/`get`/`update`/`rename`/`list`                                     |
-| `SavedChartCreateOptions` | `charts.create` transport options plus optional `title`                                                    |
+| `SavedChartCreateOptions` | `charts.create` transport options plus optional `title` and `sharedTheme`                                  |
+| `SavedChartUpdateOptions` | `charts.update` transport options plus optional `sharedTheme`                                              |
 | `SavedChartDocumentState` | Owner state from `charts.getDocumentState`                                                                 |
 | `SavedChartDocuments`     | `charts.getDocuments` result (`documents`, `missing`)                                                      |
-| `SavedChartListItem`      | A `charts.list` item: `SavedChart` plus a listing-only `hasDraft` flag                                     |
+| `SavedChartListItem`      | A `charts.list` item: `SavedChart` plus `hasDraft`, `authorId`, and `authorName`                           |
 | `SavedChartListParams`    | Filters and pagination options accepted by `charts.list`                                                   |
 | `SavedChartSource`        | Open union of chart origins (`"api"`, `"figma"`, `"app"`, `"mcp"`, …)                                      |
 | `SavedChartSort`          | `charts.list` sort order (`"created"`, `"updated"`, `"title"`)                                             |
 | `SavedChartPage`          | `charts.list` result (`items`, `nextCursor`, optional `total`)                                             |
 | `DocumentMissingReason`   | Open union: why a document was missing (`"not_found"`, `"unavailable"`, …)                                 |
+| `WorkspaceTheme`          | A shared theme from `themes.list` (`name`, `theme`, optional `themeOverrides`, `isDefault`)                |
+| `WorkspaceThemes`         | `themes.list` result (`themes`, `defaultBuiltInTheme`)                                                     |
 | `SCHEMA_VERSION`          | Schema version this SDK was built against                                                                  |
 
 ## Documentation

@@ -6,7 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- `themes.list()` returns the workspace's shared themes, the default first, and `defaultBuiltInTheme` when new charts start in one of Szum's built-in themes instead. A personal workspace returns no themes. `WorkspaceTheme` and `WorkspaceThemes` describe the result.
+- `charts.create()` and `charts.update()` accept `sharedTheme`, the name of one of a Team workspace's shared themes, and link the chart to it. `SavedChartUpdateOptions` describes the update options.
+- `charts.list()` accepts `author`, an `authorId` from a listed chart or `"former"` for charts whose author has left the workspace. Each listed chart carries `authorId` and `authorName`.
+- Validation and render diagnostics type the `workspace_rule` code, whose details list the accepted themes in `allowedThemes` and chart types in `allowedChartTypes`.
+
+### Fixed
+
+- Diagnostics from a later Szum release, such as an unfamiliar code, reason, or detail, are returned instead of rejecting the render or validation response.
 
 ## [4.1.0] - 2026-10-13
 
