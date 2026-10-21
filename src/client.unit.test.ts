@@ -1055,6 +1055,7 @@ describe("Szum (unit)", () => {
             draft: null,
             publishedAt: "2024-06-01T00:00:00.000Z",
             title: "Quarterly revenue",
+            sharedTheme: "Brand",
           }),
         }),
       );
@@ -1069,6 +1070,7 @@ describe("Szum (unit)", () => {
         draft: null,
         publishedAt: "2024-06-01T00:00:00.000Z",
         title: "Quarterly revenue",
+        sharedTheme: "Brand",
       });
     });
 
@@ -1084,6 +1086,7 @@ describe("Szum (unit)", () => {
             draft: RESOLVED_DOCUMENT,
             publishedAt: null,
             title: "Draft chart",
+            sharedTheme: null,
           }),
         }),
       );
@@ -1093,7 +1096,29 @@ describe("Szum (unit)", () => {
         draft: RESOLVED_DOCUMENT,
         publishedAt: null,
         title: "Draft chart",
+        sharedTheme: null,
       });
+    });
+
+    it("throws SzumAPIError when 'sharedTheme' is missing", async () => {
+      const szum = new Szum({
+        apiKey: "sk_test",
+        baseUrl: "https://test.szum.io",
+      });
+      fetchMock.mockResolvedValue(
+        createMockResponse({
+          body: JSON.stringify({
+            document: RESOLVED_DOCUMENT,
+            draft: null,
+            publishedAt: null,
+            title: "Quarterly revenue",
+          }),
+        }),
+      );
+
+      await expect(
+        szum.charts.getDocumentState("abc123"),
+      ).rejects.toBeInstanceOf(SzumAPIError);
     });
 
     it("throws SzumAPIError when 'document' is missing", async () => {

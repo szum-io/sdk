@@ -126,7 +126,7 @@ const { items: hits, total } = await szum.charts.list({
 
 // Read one chart's metadata or complete owner document state
 const chart = await szum.charts.get(id);
-const { document, draft, publishedAt, title } =
+const { document, draft, publishedAt, title, sharedTheme } =
   await szum.charts.getDocumentState(id);
 
 // Read many preview documents in one request (max 100 ids)
@@ -169,7 +169,7 @@ const { items: byAuthor } = await szum.charts.list({ author: authorId });
 const { items: orphaned } = await szum.charts.list({ author: "former" });
 ```
 
-A linked chart follows the shared theme: when an admin edits it, the chart's image and embed change too. A document that sets neither `theme` nor `themeOverrides` starts in the workspace's default theme. `defaultBuiltInTheme` names the default when it is one of Szum's built-in themes rather than a shared one. Each `list` item carries `authorId` (`null` when unknown) and `authorName` (`"Former member"` once the author has left). A personal workspace has no shared themes.
+A linked chart follows the shared theme: when an admin edits it, the chart's image and embed change too. `getDocumentState` names the theme a published chart is linked to in `sharedTheme` (`null` without one); pass it back to `update` to keep the link, because an update without `sharedTheme` ends it. A document that sets neither `theme` nor `themeOverrides` starts in the workspace's default theme. `defaultBuiltInTheme` names the default when it is one of Szum's built-in themes rather than a shared one. Each `list` item carries `authorId` (`null` when unknown) and `authorName` (`"Former member"` once the author has left). A personal workspace has no shared themes.
 
 ## Configuration
 

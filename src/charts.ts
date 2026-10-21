@@ -252,7 +252,11 @@ export class SzumCharts {
     return parseSavedChart(response, await parseJsonObject(response));
   }
 
-  /** Read a chart's complete owner document, including publication and draft. */
+  /**
+   * Read a chart's complete owner document, including publication and draft.
+   * `sharedTheme` names the shared theme the publication is linked to; pass it
+   * back to `update` to keep the link.
+   */
   async getDocumentState(
     id: string,
     options?: RequestOptions,
@@ -278,6 +282,7 @@ export class SzumCharts {
       draft: draft === null ? null : parseDocument(draft, response),
       publishedAt,
       title: requireString(obj, "title", response),
+      sharedTheme: requireStringOrNull(obj, "sharedTheme", response),
     };
   }
 

@@ -113,6 +113,7 @@ describe("documents from a later release", () => {
         draft: null,
         publishedAt: null,
         title: "Later",
+        sharedTheme: null,
       }),
     );
 
@@ -186,6 +187,7 @@ describe("documents from a later release", () => {
         draft: null,
         publishedAt: null,
         title: "Broken",
+        sharedTheme: null,
       }),
     );
 
@@ -711,6 +713,7 @@ describe("generated response contracts", () => {
           draft: null,
           publishedAt: null,
           title: "x",
+          sharedTheme: null,
         }),
       );
       await expect(client.charts.getDocumentState("a")).rejects.toBeInstanceOf(
@@ -722,6 +725,7 @@ describe("generated response contracts", () => {
           draft: invalidDocument,
           publishedAt: null,
           title: "x",
+          sharedTheme: null,
         }),
       );
       await expect(client.charts.getDocumentState("a")).rejects.toBeInstanceOf(

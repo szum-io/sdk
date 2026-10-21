@@ -100,6 +100,10 @@ interface SavedChartsContract {
      * Saved chart title
      */
     title: string;
+    /**
+     * Name of the shared theme the published document is linked to; null without a publication or a link, or when the theme was deleted
+     */
+    sharedTheme: string | null;
   };
   listItem: SzumSchema0;
   page: {

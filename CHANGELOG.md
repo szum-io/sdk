@@ -6,7 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- `charts.getDocumentState()` returns `sharedTheme`, the name of the shared theme the published document is linked to, or `null` when it has none or the theme was deleted. Pass it back to `charts.update()` to keep the link; an update without `sharedTheme` ends it.
 
 ## [4.2.0] - 2026-10-21
 
