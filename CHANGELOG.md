@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [4.2.0] - 2026-10-21
+
 ### Added
 
 - `themes.list()` returns the workspace's shared themes, the default first, and `defaultBuiltInTheme` when new charts start in one of Szum's built-in themes instead. A personal workspace returns no themes. `WorkspaceTheme` and `WorkspaceThemes` describe the result.
@@ -247,7 +251,8 @@ Review custom color configuration during conversion. Scalar colors may still pro
 - `SZUM_DEBUG=true` env var for request/response logging to `stderr`.
 - `SCHEMA_VERSION` export tied to the chart schema version the SDK was built against.
 
-[unreleased]: https://github.com/szum-io/sdk/compare/v4.1.0...HEAD
+[unreleased]: https://github.com/szum-io/sdk/compare/v4.2.0...HEAD
+[4.2.0]: https://github.com/szum-io/sdk/compare/v4.1.0...v4.2.0
 [4.1.0]: https://github.com/szum-io/sdk/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/szum-io/sdk/compare/v3.2.0...v4.0.0
 [3.2.0]: https://github.com/szum-io/sdk/compare/v3.1.0...v3.2.0
