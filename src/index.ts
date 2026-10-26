@@ -46,3 +46,16 @@ export type {
 export { SCHEMA_VERSION } from "./generated/version";
 export { type WorkspaceTheme, type WorkspaceThemes } from "./themes";
 export { type ValidationOptions, validateChart } from "./validation";
+export type {
+  SavedChartVersion,
+  SavedChartVersionDetail,
+  SavedChartVersionDuplicateOptions,
+  SavedChartVersionListParams,
+  SavedChartVersionPage,
+  SavedChartVersionPreparation,
+  SavedChartVersionPreview,
+  SavedChartVersionReference,
+  SavedChartVersionRestore,
+  SavedChartVersionRestoreOptions,
+  SavedChartWithVersion,
+} from "./versions";

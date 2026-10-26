@@ -1,5 +1,5 @@
 import type { ChartDocument, RequestOptions } from "./contracts";
-import { SzumAPIError, SzumError, SzumInvalidRequestError } from "./errors";
+import { SzumError, SzumInvalidRequestError } from "./errors";
 import type {
   DocumentMissingReason,
   SavedChart,
@@ -8,7 +8,6 @@ import type {
   SavedChartDocumentState,
   SavedChartListParams,
   SavedChartPage,
-  SavedChartSource,
   SavedChartUpdateParams,
 } from "./generated/saved-charts";
 import type { ChartDocumentInput } from "./generated/document";
@@ -23,9 +22,15 @@ import {
   requireString,
   requireStringOrNull,
 } from "./json";
-import { parseRequestId } from "./http";
 import { assertSharedThemeChoice } from "./options";
-import { isResponseDocument } from "./response-documents";
+import {
+  assertId,
+  assertIsoTimestamp,
+  invalidResponseField,
+  parseDocument,
+  parseSavedChart,
+} from "./saved-chart-response";
+import { SzumChartVersions } from "./versions";
 
 type InternalApi = {
   request: (
@@ -49,62 +54,15 @@ const assertTitle = (title: unknown): void => {
   }
 };
 
-const assertId = (id: string): void => {
-  if (typeof id !== "string" || id.length === 0) {
-    throw new SzumInvalidRequestError({
-      message: "id must be a non-empty string",
-      status: 0,
-    });
-  }
-};
-
-// imageUrl/embedUrl/id are parsed first so a malformed response reports the
-// most recognizable missing field.
-const parseSavedChart = (
-  response: Response,
-  obj: Record<string, unknown>,
-): SavedChart => {
-  const imageUrl = requireString(obj, "imageUrl", response);
-  const embedUrl = requireString(obj, "embedUrl", response);
-  const id = requireString(obj, "id", response);
-  const source = requireString(obj, "source", response) as SavedChartSource;
-  const title = requireString(obj, "title", response);
-  const createdAt = requireString(obj, "createdAt", response);
-  const updatedAt = requireString(obj, "updatedAt", response);
-  const sizeBytes = requireNonnegativeInteger(obj, "sizeBytes", response);
-  const publishedAt = requireStringOrNull(obj, "publishedAt", response);
-  const documentUrl = requireString(obj, "documentUrl", response);
-
-  assertIsoTimestamp(response, "createdAt", createdAt);
-  assertIsoTimestamp(response, "updatedAt", updatedAt);
-
-  if (publishedAt !== null) {
-    assertIsoTimestamp(response, "publishedAt", publishedAt);
-  }
-
-  assertAbsoluteUrl(response, "imageUrl", imageUrl);
-  assertAbsoluteUrl(response, "embedUrl", embedUrl);
-  assertAbsoluteUrl(response, "documentUrl", documentUrl);
-
-  return {
-    id,
-    source,
-    title,
-    createdAt,
-    updatedAt,
-    sizeBytes,
-    publishedAt,
-    imageUrl,
-    embedUrl,
-    documentUrl,
-  };
-};
-
 export class SzumCharts {
+  /** A chart's version history: list, read, restore, copy, name, delete. */
+  readonly versions: SzumChartVersions;
+
   private readonly api: InternalApi;
 
   constructor(api: InternalApi) {
     this.api = api;
+    this.versions = new SzumChartVersions(api);
   }
 
   /**
@@ -369,7 +327,8 @@ export class SzumCharts {
    * `options.sharedTheme`, a chart linked to a shared theme keeps the link
    * unless the document sets a different theme of its own; `null` ends it.
    * `options.expectedUpdatedAt` refuses the update when the chart changed
-   * since that `updatedAt`.
+   * since that `updatedAt`. `options.source` names the client making the
+   * update, recorded on the version it publishes; it defaults to `"api"`.
    */
   async update(
     id: string,
@@ -390,6 +349,13 @@ export class SzumCharts {
       });
     }
 
+    if (options?.source !== undefined && typeof options.source !== "string") {
+      throw new SzumInvalidRequestError({
+        message: "source must be a string",
+        status: 0,
+      });
+    }
+
     const response = await this.api.request(
       `/api/charts/${encodeURIComponent(id)}/document`,
       {
@@ -403,6 +369,7 @@ export class SzumCharts {
           ...(options?.expectedUpdatedAt !== undefined
             ? { expectedUpdatedAt: options.expectedUpdatedAt }
             : {}),
+          ...(options?.source !== undefined ? { source: options.source } : {}),
         }),
       },
       options,
@@ -462,53 +429,3 @@ export class SzumCharts {
     }
   }
 }
-
-const parseDocument = (
-  value: unknown,
-  response: Response,
-): ChartDocumentInput => {
-  if (!isResponseDocument(value)) {
-    throw invalidResponseField(response, "document");
-  }
-
-  return value;
-};
-
-const assertIsoTimestamp = (
-  response: Response,
-  field: string,
-  value: string,
-): void => {
-  if (
-    !/^\d{4}-\d{2}-\d{2}T/.test(value) ||
-    !Number.isFinite(Date.parse(value))
-  ) {
-    throw invalidResponseField(response, field);
-  }
-};
-
-const assertAbsoluteUrl = (
-  response: Response,
-  field: string,
-  value: string,
-): void => {
-  try {
-    const url = new URL(value);
-
-    if (url.protocol !== "https:" && url.protocol !== "http:") {
-      throw invalidResponseField(response, field);
-    }
-  } catch {
-    throw invalidResponseField(response, field);
-  }
-};
-
-const invalidResponseField = (
-  response: Response,
-  field: string,
-): SzumAPIError =>
-  new SzumAPIError({
-    message: `Invalid response: missing or invalid '${field}' field`,
-    status: response.status,
-    requestId: parseRequestId(response),
-  });

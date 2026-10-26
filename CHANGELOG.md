@@ -6,7 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- `charts.versions` reads and changes a chart's version history. `list()` pages through versions newest first, with who published each, from which client, and what changed. `get()` returns a version with its stored document and the document a restore would publish now, with a `fingerprint`. `restore()` publishes a version again as a new version under the same id and URLs, `duplicate()` creates a new chart from it, `name()` names or unnames it, and `delete()` and `deleteEarlier()` delete versions for workspace admins. `SavedChartVersion`, `SavedChartVersionPage`, `SavedChartVersionDetail`, and their option types describe them.
+- `charts.update()` accepts `source`, the client making the update (`"api"`, `"app"`, `"figma"`, or `"mcp"`), which Szum records on the version it publishes. It defaults to `"api"`.
 
 ## [4.3.0] - 2026-10-21
 

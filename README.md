@@ -156,7 +156,36 @@ await szum.charts.update(chart.id, nextYear, {
 
 If the chart was published or renamed since, `update` rejects with a `409` `conflict` and changes nothing; read it again and decide what to do.
 
+`update` records `"api"` as the client on the version it publishes. An integration that publishes for another surface can name it with `source`: `"app"`, `"figma"` or `"mcp"`.
+
 `create` is safe to retry. Each call sends its own idempotency key and reuses it across its automatic retries, so a create that timed out after Szum saved it doesn't make a second chart. Pass `idempotencyKey` to keep one key across separate calls or processes.
+
+### Version history
+
+Every publication of a chart is a version: creating it, each `update`, a restore, and a move between workspaces. Publishing an identical document makes no new version.
+
+```typescript
+const { currentVersion, items, nextCursor } = await szum.charts.versions.list(
+  chart.id,
+);
+
+const { version, preparation } = await szum.charts.versions.get(chart.id, 3);
+
+await szum.charts.versions.restore(chart.id, 3); // publish it again, same URLs
+await szum.charts.versions.duplicate(chart.id, 3); // a new chart from it
+await szum.charts.versions.name(chart.id, 3, "Launch"); // null clears it
+await szum.charts.versions.delete(chart.id, 2);
+await szum.charts.versions.deleteEarlier(chart.id, {
+  beforeNumber: 3,
+  includeLabelled: false,
+});
+```
+
+Each version says who published it (`publishedByName`), from where (`client`, plus `apiKeyName` or `mcpClientName`), and what changed from the one before (`changedSections`). `get` returns the stored document as a `preview` and, in `restore`, the document a restore would publish under the workspace's current themes and rules, with a `fingerprint`. Pass that `fingerprint` to `restore` to publish exactly what you read; it rejects with a `409` when something changed.
+
+A restore publishes the version as a new one, so the version it replaces stays restorable. Like `update`, it refuses with `409` while the chart has a Studio draft. History counts toward storage, and when storage runs low its oldest versions lose their content to make room, named versions last. Such a version, or a deleted one, keeps its `removal` record but can't be read or restored. Deleting versions needs a workspace admin.
+
+`duplicate` is safe to retry, like `create`.
 
 ### List charts
 

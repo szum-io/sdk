@@ -157,6 +157,10 @@ interface SavedChartsContract {
      * The chart's updatedAt exactly as read; the update is refused as a conflict when the chart was published or renamed since
      */
     expectedUpdatedAt?: string;
+    /**
+     * Client making this update, recorded on the version it publishes; defaults to api
+     */
+    source?: "api" | "figma" | "app" | "mcp";
   };
 }
 interface SzumSchema1 {
